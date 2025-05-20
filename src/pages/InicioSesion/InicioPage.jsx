@@ -16,18 +16,7 @@ const InicioPage = () => {
     const navigate = useNavigate();
     const [connectionStatus, setConnectionStatus] = useState('');
     const { login } = useContext(AuthContext);
-    useEffect(() => {
-      const testBackendConnection = async () => {
-          try {
-              const response = await testConnection();
-              setConnectionStatus(response.mensaje);
-          } catch (error) {
-              setConnectionStatus('Error al conectar con el backend');
-          }
-      };
-      
-      testBackendConnection();
-  }, []);
+    
     const paswordShow = () => setPasword(!showPassword);
 
     const handleglogin=(e)=>{

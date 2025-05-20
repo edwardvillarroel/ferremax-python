@@ -16,6 +16,8 @@ function ProductoPage() {
     });
 
 
+
+
     
 
     const handleInputChange = (e) => {
