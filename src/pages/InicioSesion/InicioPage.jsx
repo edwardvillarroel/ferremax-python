@@ -7,15 +7,27 @@ import { AuthContext } from '../InicioSesion/authContext';
 import Swal from 'sweetalert2';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import { testConnection } from '../../api';
 
 const InicioPage = () => {
     const [showPassword, setPasword] = useState(false);
     const [email , setEmail] = useState('');
     const [password , setPassword] = useState('');
     const navigate = useNavigate();
-
+    const [connectionStatus, setConnectionStatus] = useState('');
     const { login } = useContext(AuthContext);
-
+    useEffect(() => {
+      const testBackendConnection = async () => {
+          try {
+              const response = await testConnection();
+              setConnectionStatus(response.mensaje);
+          } catch (error) {
+              setConnectionStatus('Error al conectar con el backend');
+          }
+      };
+      
+      testBackendConnection();
+  }, []);
     const paswordShow = () => setPasword(!showPassword);
 
     const handleglogin=(e)=>{
@@ -30,6 +42,7 @@ const InicioPage = () => {
       });
       return;
       }
+
 
       if(userSaved.email === email && userSaved.password === password){
         const token = Math.random().toString(36).substring(2);
@@ -147,6 +160,7 @@ const InicioPage = () => {
         </div>
     </Container>
     );
+    
 }
 
 export default InicioPage;
