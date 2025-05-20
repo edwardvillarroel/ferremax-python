@@ -1,0 +1,150 @@
+.div-contenedor {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1rem;
+  gap: 2rem;
+  box-sizing: border-box;
+  flex-wrap: nowrap; 
+}
+
+.formulario-custom,
+.formulario-custom2 {
+  flex: 1;
+  max-width: 50%; 
+  box-sizing: border-box;
+}
+
+.formulario-custom {
+  padding: 2.5rem;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.formulario-custom2 {
+  padding: 2rem;
+  background-color: #00bcd4;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.formulario-custom h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #343a40;
+}
+
+.formulario-custom2 .mb-3 {
+  margin-bottom: 0; 
+}
+
+.formulario-custom2 form {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.formulario-custom2 p {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #000000;
+}
+
+.formulario-custom .form-label {
+  font-weight: 600;
+}
+
+.mb-3 h3{
+    font-size: 20px;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.mb-3 h4{
+    font-size: 22px;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 10px;
+    color: #030303;
+}
+
+.formulario-custom .form-control {
+  border-radius: 5px;
+}
+
+.buttonInicio{
+    background-color: #00bcd4;
+    border-color: #00bcd4;
+    margin-top: 15px;
+    width: 150px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-left: 185px;
+    margin-right: 100px;
+    margin-bottom: 10px;
+}
+
+.buttonInicio:hover{
+    background-color: #079db1 !important;
+    border-color: #00bcd4 !important;
+}
+
+.passwordRes{
+  justify-content: center;
+  text-align: center;
+  color: #212122;
+}
+
+
+.passwordRes:hover{
+  color: #00bcd4;
+}
+
+.buttonLog {
+  background-color: #070707;
+  border-color: #070707;
+  margin-top: 15px;
+  width: 250px;
+  border-radius: 5px;
+  font-weight: bold;
+  display: block;              
+  margin-left: auto;           
+  margin-right: auto;
+  text-align: center;          
+}
+
+.buttonLog:hover{
+    background-color: #252525 !important;
+    border-color: #252525 !important;
+}
+
+.formulario-custom .form-text {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+@media (max-width: 768px) {
+  .div-contenedor {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .formulario-custom,
+  .formulario-custom2 {
+    width: 100%;         
+    max-width: 100%;     
+    border-radius: 0;    
+    padding: 2rem;
+  }
+}

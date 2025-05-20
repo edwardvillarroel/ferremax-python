@@ -1,0 +1,71 @@
+.cardPromocion {
+  margin: 15px;
+  flex: 0 1 250px;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.discount-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #e53935;
+  color: white;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #888;
+  margin-left: 10px;
+}
+
+.current-price {
+  color: #00d42e;
+  font-weight: bold;
+}
+
+.card-title{
+  color: #888;
+}
+
+.card-divider {
+  height: 1px;
+  background-color: #c0b9b9c9;
+  margin: 0 1rem;
+}
+
+.card-body-custom {
+  text-align: left;
+}
+
+.button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.button-card {
+  background-color: #00bcd4 !important;
+  color: aliceblue !important;
+  border: none;
+  border-radius: 8px !important;
+  padding: 10px 70px !important;
+  font-weight: 500;
+  text-transform: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+
+.cards-wrapper {
+  display: flex;
+  flex-wrap: wrap;        
+  justify-content: center; 
+  gap: 20px;               
+  padding: 20px;
+}

@@ -1,0 +1,83 @@
+.div-carrito {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.div-carrito h1{
+    margin-bottom: 30px;
+}
+
+.cart-header,
+.cart-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 0;
+}
+
+.cart-header {
+  font-weight: bold;
+  border-bottom: 2px solid #ccc;
+  margin-bottom: 10px;
+}
+
+.cart-item {
+  border-bottom: 1px solid #ddd;
+  padding: 15px 0;
+}
+
+.cart-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cart-item-img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  margin-right: 15px;
+  top:0;
+}
+
+.cart-item-desc {
+  font-size: 14px;
+}
+
+.cart-item-price,
+.cart-item-subtotal,
+.cart-item-qty,
+.cart-item-delete {
+  text-align: center;
+  margin-right: 80px;
+}
+
+.cart-qty-btn {
+  font-size: 20px;
+}
+
+.cart-item-qty{
+    margin-right: 30px;
+}
+
+.cart-item-subtotal{
+margin-right: 30px;
+}
+.cart-total {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.cart-empty {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+.basurero {
+  font-size: 30px;
+  color: rgba(37, 36, 36, 0.842);
+  cursor: pointer;
+}
