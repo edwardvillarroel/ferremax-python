@@ -5,6 +5,9 @@ from config import (
     flask_get_producto,
     flask_crear_producto,
     flask_modificar_producto,
+    flask_eliminar_producto,
+    flask_login,
+    flask_crear_cliente,
     flask_eliminar_producto
 )
 
@@ -32,6 +35,18 @@ def modificar_producto(id_producto):
 @app.route('/api/productos/<id_producto>', methods=['DELETE'])
 def eliminar_producto(id_producto):
     return flask_eliminar_producto(id_producto)
+
+@app.route('/api/login', methods=['GET'])
+def login():
+    email = request.args.get('email')
+    password = request.args.get('password')
+    return flask_login(email, password)
+
+@app.route('/api/clientes', methods=['POST'])
+def crear_cliente():
+    data = request.get_json()
+    return flask_crear_cliente(data)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
