@@ -12,7 +12,7 @@ export function MediaCard() {
       try {
         const response = await axios.get('http://localhost:5000/api/productos');
         const productosData = Array.isArray(response.data.data) ? response.data.data : [];
-        
+        console.log(productosData);
         // Eliminar duplicados usando Map para mantener solo una instancia por ID
         const productosMap = new Map();
         productosData.forEach(producto => {
@@ -60,12 +60,16 @@ export function MediaCard() {
     <div className="products-container">
       {Array.isArray(productos) && productos.length > 0 ? (
         productos.map((producto) => (
+          
           <div key={producto.id_producto} className="media-card-wrapper">
             <Card className="cardPromocion">
-              <Card.Img variant="top" src={producto.img_prod} onError={(e) => {
+              <Card.Img variant="top" src={`data:image/jpeg;base64,${producto.img_prod}`}
+                  onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = '/imagenes/unaviable.jpg';
-                  }}/>
+                  }}
+                  alt={producto.nom_prod}/>
+                  
               <div className="card-divider"/>
               <Card.Body className="card-body-custom">
                 <Card.Title className="card-title">{producto.nom_prod}</Card.Title>
@@ -87,7 +91,9 @@ export function MediaCard() {
       ) : (
         <p>No hay productos disponibles</p>
       )}
+
     </div>
+    
   );
 }
 
