@@ -52,7 +52,13 @@ def execute_query(query: str, params: tuple = None, fetch: bool = True) -> Union
         
 def get_productos() -> List[Dict[str, Any]]:
     query = "SELECT * FROM Producto"
-    return execute_query(query)
+    productos = execute_query(query)
+    
+    for producto in productos:
+        if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
+            producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+    
+    return productos
 
 
 def get_producto(id_producto: str) -> Optional[Dict[str, Any]]:

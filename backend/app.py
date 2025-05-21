@@ -1,4 +1,5 @@
 from flask import Flask, request
+from flask_cors import CORS
 from config import (
     flask_get_productos,
     flask_get_producto,
@@ -8,6 +9,13 @@ from config import (
 )
 
 app = Flask(__name__)
+CORS(app,resources={
+    r"/api/*": {
+        "origins": ["http://localhost:3001"],
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 @app.route('/api/productos', methods=['GET'])
 def get_productos():

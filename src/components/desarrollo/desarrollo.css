@@ -5,7 +5,18 @@
   text-align: center;
   position: relative;
 }
+.description {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 8px 0;
+}
 
+.stock {
+  font-size: 0.8rem;
+  color: #28a745;
+  display: block;
+  margin-top: 5px;
+}
 .discount-badge {
   position: absolute;
   top: 10px;
@@ -68,4 +79,34 @@
   justify-content: center; 
   gap: 20px;               
   padding: 20px;
+}
+.products-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.media-card-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.cardPromocion {
+  width: 100%;
+  max-width: 300px;
+}
+.imagen-no-disponible {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  color: #666;
+  font-size: 1rem;
+  text-align: center;
+  border-radius: 4px 4px 0 0;
 }
