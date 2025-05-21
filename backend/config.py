@@ -192,6 +192,46 @@ def login(email_cliente: str, password_cliente: str) -> Optional[Dict[str, Any]]
         return cliente
     return None
 
+
+def get_cliente(email_cliente: str) -> Optional[Dict[str, Any]]:
+    if not isinstance(email_cliente, str) or len(email_cliente) > 40:
+        raise ValueError("Formato no válido")
+    query = "SELECT * FROM clientes WHERE email_cliente = %s"
+    result = execute_query(query, (email_cliente,))
+    return result[0] if result else None
+
+
+def registro_cliente(
+    run_cliente: str,
+    dvrun_cliente: str,
+    nombre_cliente: str,
+    apellidos_cliente: str,
+    email_cliente: str,
+    password_cliente: str) -> Dict[str, Any]:
+        
+    validaciones = [
+        (isinstance(run_cliente, str) and len(run_cliente) <= 8, "run_cliente"),
+        (isinstance(dvrun_cliente, str) and len(dvrun_cliente) == 1, "dvrun_cliente"),
+        (isinstance(nombre_cliente, str) and len(nombre_cliente) <= 20, "nombre_cliente"),
+        (isinstance(apellidos_cliente, str) and len(apellidos_cliente) <= 20, "apellidos_cliente"),
+        (isinstance(email_cliente, str) and len(email_cliente) <= 40, "email_cliente"),
+        (isinstance(password_cliente, str) and len(password_cliente) <= 20, "password_cliente")
+    ]
+    
+    for valor, campo in validaciones:
+        if not valor:
+            raise ValueError(f"Formato no válido: {campo}")
+    
+    cliente_existente = get_cliente(email_cliente)
+    if cliente_existente:
+        raise ValueError("Email ya registrado")
+
+    query = """INSERT INTO clientes (run_cliente, dvrun_cliente, nombre_cliente, apellidos_cliente, 
+               email_cliente, password_cliente) VALUES (%s, %s, %s, %s, %s, %s)"""
+    params = (run_cliente, dvrun_cliente, nombre_cliente, apellidos_cliente, email_cliente, password_cliente)
+    execute_query(query, params, fetch=False)
+
+    return get_cliente(email_cliente)
 """weas para usar las funciones en flask"""
 
 
@@ -313,4 +353,39 @@ def flask_eliminar_producto(id_producto: str) -> Tuple[Dict, int]:
         return {"error": f"Error: {str(e)}"}, 500
     
 
+def flask_crear_cliente(data: Dict[str, Any]) -> Tuple[Dict, int]:
+    try:        
+        campos_obligatorios = ['run_cliente', 'dvrun_cliente', 'nombre_cliente', 
+                              'apellidos_cliente', 'email_cliente', 'password_cliente']
+        
+        for campo in campos_obligatorios:
+            if campo not in data:
+                return {"error": f"El campo '{campo}' es obligatorio"}, 400
+                
+        email = data['email_cliente']
+        cliente_existente = get_cliente(email)
+        if cliente_existente:
+            return {"error": "Email ya registrado"}, 409
+                
+        
+        nuevo_cliente = registro_cliente(
+            run_cliente=data['run_cliente'],
+            dvrun_cliente=data['dvrun_cliente'],
+            nombre_cliente=data['nombre_cliente'],
+            apellidos_cliente=data['apellidos_cliente'],
+            email_cliente=data['email_cliente'],
+            password_cliente=data['password_cliente']
+        )
+        
+        return {
+            "message": "Cliente registrado",
+            "data": nuevo_cliente
+        }, 201
+    except ValueError as e:
+        return {"error": str(e)}, 400
+    except DatabaseError as e:
+        return {"error": str(e)}, 500
+    except Exception as e:
+        return {"error": f"Error: {str(e)}"}, 500
+    
 "cualquier wea nueva se agrega aqui"

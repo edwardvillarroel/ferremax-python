@@ -7,6 +7,7 @@ from config import (
     flask_modificar_producto,
     flask_eliminar_producto,
     flask_login,
+    flask_crear_cliente,
 )
 
 app = Flask(__name__)
@@ -45,6 +46,11 @@ def login():
     email = request.args.get('email')
     password = request.args.get('password')
     return flask_login(email, password)
+
+@app.route('/api/clientes', methods=['POST'])
+def crear_cliente():
+    data = request.get_json()
+    return flask_crear_cliente(data)
 
 
 if __name__ == '__main__':
