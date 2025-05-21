@@ -1,0 +1,120 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "API Ferremax",
+      "description": "API para la gestión de productos y clientes de Ferremax",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/api/productos": {
+        "get": {
+          "tags": ["Productos"],
+          "summary": "Obtiene todos los productos",
+          "responses": {
+            "200": {
+              "description": "Lista de productos obtenida exitosamente"
+            }
+          }
+        },
+        "post": {
+          "tags": ["Productos"],
+          "summary": "Crea un nuevo producto",
+          "parameters": [
+            {
+              "name": "producto",
+              "in": "body",
+              "description": "Datos del producto a crear",
+              "required": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_producto": {"type": "string"},
+                  "nom_prod": {"type": "string"},
+                  "descr_prod": {"type": "string"},
+                  "precio": {"type": "integer"},
+                  "marca": {"type": "string"},
+                  "stock": {"type": "integer"},
+                  "id_categoria": {"type": "integer"}
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Producto creado exitosamente"
+            }
+          }
+        }
+      },
+      "/api/productos/{id_producto}": {
+        "get": {
+          "tags": ["Productos"],
+          "summary": "Obtiene un producto específico",
+          "parameters": [
+            {
+              "name": "id_producto",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Producto encontrado exitosamente"
+            }
+          }
+        },
+        "put": {
+          "tags": ["Productos"],
+          "summary": "Modifica un producto existente",
+          "parameters": [
+            {
+              "name": "id_producto",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "name": "producto",
+              "in": "body",
+              "description": "Datos actualizados del producto",
+              "required": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nom_prod": {"type": "string"},
+                  "descr_prod": {"type": "string"},
+                  "precio": {"type": "integer"},
+                  "marca": {"type": "string"},
+                  "stock": {"type": "integer"},
+                  "id_categoria": {"type": "integer"}
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Producto actualizado exitosamente"
+            }
+          }
+        },
+        "delete": {
+          "tags": ["Productos"],
+          "summary": "Elimina un producto",
+          "parameters": [
+            {
+              "name": "id_producto",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Producto eliminado exitosamente"
+            }
+          }
+        }
+      }
+    }
+  }
