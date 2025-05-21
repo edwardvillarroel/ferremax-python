@@ -36,7 +36,10 @@ function NavbarF() {
       }
     });
   }
-
+  const irAlCarrito = () => {
+    navigate('/TuCarrito');
+    setShowPopover(false);
+  };
   return (
     <>
       <Navbar collapseOnSelect expand="lg" className="bg-dark custom-navbar" variant="dark">
@@ -70,28 +73,37 @@ function NavbarF() {
             </div>
 
             {rol !== 'admin' &&(
-            <div className="cart-icon-container ms-3">
-              <Button
-                variant="link"
-                ref={popoverTarget}
-                onClick={() => setShowPopover(!showPopover)}
-                className="p-0 border-0 bg-transparent"
-              >
-                <AiOutlineShoppingCart className="cart-icon" />
-              </Button>
+           <div className="cart-icon-container ms-3">
+           <Button
+             variant="link"
+             ref={popoverTarget}
+             onClick={() => setShowPopover(!showPopover)}
+             className="p-0 border-0 bg-transparent"
+           >
+             <AiOutlineShoppingCart className="cart-icon" />
+           </Button>
 
-              <Overlay className="overlay-custom" target={popoverTarget.current} show={showPopover} placement="bottom">
-                {(props) => (
-                  <Popover {...props}>
-                    <Popover.Header as="h3">Carrito de compras</Popover.Header>
-                    <Popover.Body>No hay articulos
-                      
-                    </Popover.Body>
-                  </Popover>
-                )}
-              </Overlay>
-            </div>
-            )}
+           <Overlay className="overlay-custom" target={popoverTarget.current} show={showPopover} placement="bottom">
+             {(props) => (
+               <Popover {...props}>
+                 <Popover.Header as="h3">Carrito de compras</Popover.Header>
+                 <Popover.Body>
+                   <div className="text-center">
+                     <p>No hay artículos</p>
+                     <Button 
+                       variant="primary"
+                       onClick={irAlCarrito}
+                       className="mt-2"
+                     >
+                       Ver carrito completo
+                     </Button>
+                   </div>
+                 </Popover.Body>
+               </Popover>
+             )}
+           </Overlay>
+         </div>
+         )}
           </div>
 
           <Navbar.Collapse id="responsive-navbar-nav">

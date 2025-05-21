@@ -8,6 +8,8 @@ import InicioPage from './pages/InicioSesion/InicioPage';
 import RegistroUser from './pages/Registro/Registro';
 import CarritoPage from './pages/Carrito/Carrito';
 import AdminPage from './pages/Admin/Admin';
+import WebpayCheckout from './components/webPay/webPayCheckout';
+import ResultadoPago from './components/webPay/resultadoPago';
 import ProductoPage from './pages/Productos/ProductoPage';
 
 
@@ -20,15 +22,11 @@ function Inicio() {
       </h1>
       <div className="cards-wrapper">
         <MediaCard />
-        <MediaCard />
-        <MediaCard />
       </div>
       <h1 style={{ textAlign: 'center', margin: '2rem 0', color: 'black' }}>
         Lanzamientos Recientes
       </h1>
       <div className="cards-wrapper">
-        <MediaCardLanzamientos />
-        <MediaCardLanzamientos />
         <MediaCardLanzamientos />
       </div>
     </>
@@ -52,6 +50,8 @@ function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/TuCarrito" element={<CarritoPage />} />
           <Route path="/Producto" element={<ProductoPage />} />
+          <Route path="/webPay" element={<WebpayCheckout />} />
+          <Route path="/resultado" element={<ResultadoPago />} />
         </Routes>
       </main>
       <FooterFerremax />
