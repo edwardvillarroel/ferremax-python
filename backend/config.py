@@ -175,7 +175,40 @@ def eliminar_producto(id_producto: str) -> Dict[str, Any]:
     return {"message": f"Producto eliminado correctamente"}
 
 
+def login(email_cliente: str, password_cliente: str) -> Optional[Dict[str, Any]]:    
+    if not isinstance(email_cliente, str) or len(email_cliente) > 40:
+        raise ValueError("El email_cliente debe ser de hasta 40 caracteres")
+    if not isinstance(password_cliente, str) or len(password_cliente) > 20:
+        raise ValueError("La password_cliente debe ser de hasta 20 caracteres")
+        
+    query = "SELECT * FROM clientes WHERE email_cliente = %s"
+    result = execute_query(query, (email_cliente,))
+        
+    if not result:
+        return None
+    
+    cliente = result[0]
+    if cliente['password_cliente'] == password_cliente:
+        return cliente
+    return None
+
 """weas para usar las funciones en flask"""
+
+
+def flask_login(email_cliente: str, password_cliente: str) -> Tuple[Dict, int]:
+    try:
+        cliente = login(email_cliente, password_cliente)
+        if cliente:
+            return {"data": cliente}, 200
+        else:
+            return {"error": "correo o contraseña incorrectos"}, 401
+    except ValueError as e:
+        return {"error": str(e)}, 400
+    except DatabaseError as e:
+        return {"error": str(e)}, 500
+    except Exception as e:
+        return {"error": f"Error: {str(e)}"}, 500
+
 
 def flask_get_productos() -> Tuple[Dict, int]:
     try:
