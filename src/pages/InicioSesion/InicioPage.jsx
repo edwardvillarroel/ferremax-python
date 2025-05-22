@@ -15,7 +15,7 @@ const InicioPage = () => {
     const [password , setPassword] = useState('');
     const navigate = useNavigate();
     const [connectionStatus, setConnectionStatus] = useState('');
-    const { login } = useContext(AuthContext);
+    const { login, loginWithGoogle } = useContext(AuthContext);
     
     const paswordShow = () => setPasword(!showPassword);
 
@@ -65,7 +65,7 @@ const InicioPage = () => {
       const token = credentialResponse.credential;
       const esAdmin = email === 'admin@admin.com';
 
-      login(token, esAdmin ? 'admin': 'cliente');
+      loginWithGoogle(token, nombre, email);
 
       Swal.fire({
       icon: 'success',

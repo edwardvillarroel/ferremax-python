@@ -19,8 +19,11 @@ function FooterFerremax() {
             <h5 className="footer-heading">Casa Matriz</h5>
             <Nav className="footer-nav">
               <Nav.Link>Av. Monte Pilato 5210, Limache, Región de Valparaíso</Nav.Link>
-              <Nav.Link>
-                <AiOutlineWhatsApp className="whats-icon" /> +56960608989
+              <Nav.Link
+                href="https://wa.me/+56906089894"
+                target="_blank"
+                rel="noopener noreferrer">
+                <AiOutlineWhatsApp className="whats-icon" /> +56 9 0608 9894
               </Nav.Link>
             </Nav>
             <div className="payment-logo">
