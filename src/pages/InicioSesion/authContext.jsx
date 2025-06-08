@@ -15,29 +15,35 @@ export const AuthProvider = ({ children }) => {
     if ((token || userData) && userRol && userData?.name && userData?.email) {
       setIsLoggedIn(true);
       setRol(userRol);
-      setUser({ name: userData.name, email: userData.email });
+      setUser({
+        name: userData.name,
+        lastname: userData.lastname,
+        email: userData.email
+      });
     }
   }, []);
 
-  const login = (token, userRol) => {
-    const userData = JSON.parse(localStorage.getItem('usuario'));
+  // Ahora login recibe el usuario real desde el backend
+  const login = (token, userRol, userData) => {
+    // userData debe tener { name, lastname, email }
+    const userToStore = {
+      name: userData.name,
+      lastname: userData.lastname,
+      email: userData.email
+    };
 
-    if (userData) {
-      const userToStore = { name: userData.nombre, email: userData.email };
+    localStorage.setItem('token', token);
+    localStorage.setItem('rol', userRol);
+    localStorage.setItem('user', JSON.stringify(userToStore));
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('rol', userRol);
-      localStorage.setItem('user', JSON.stringify(userToStore));
-
-      setIsLoggedIn(true);
-      setRol(userRol);
-      setUser(userToStore);
-    }
+    setIsLoggedIn(true);
+    setRol(userRol);
+    setUser(userToStore);
   };
 
-  const loginWithGoogle = async (token, nombre, email) => {
+  const loginWithGoogle = async (token, nombre, email, lastname = '') => {
     const isAdmin = email === 'admin@admin.com';
-    const userToStore = { name: nombre, email };
+    const userToStore = { name: nombre, lastname, email };
 
     setUser(userToStore);
     setIsLoggedIn(true);
@@ -45,7 +51,7 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.setItem('user', JSON.stringify(userToStore));
     localStorage.setItem('rol', isAdmin ? 'admin' : 'cliente');
-    localStorage.setItem('token', token); 
+    localStorage.setItem('token', token);
   };
 
   const logout = () => {

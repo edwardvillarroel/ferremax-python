@@ -6,6 +6,7 @@ import logging
 from transbank.webpay.webpay_plus.transaction import Transaction
 from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import WebpayOptions
+import mysql.connector
 
 from config import (
     flask_get_productos,
@@ -229,10 +230,45 @@ def eliminar_producto(id_producto):
         }
     }
 })
-def login():
+def flask_login():
     email = request.args.get('email')
     password = request.args.get('password')
-    return flask_login(email, password)
+    try:
+        conn = mysql.connector.connect(
+            host='bd-ferramas-producto.crwi4crvnqsy.us-east-1.rds.amazonaws.com',
+            user='Ferremas_adm',
+            password='C.AdmFerremas',
+            database='ferremasBD_Prod'
+        )
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT nombre_cliente, apellidos_cliente, password_cliente FROM clientes WHERE email_cliente = %s"
+        cursor.execute(query, (email,))
+        user = cursor.fetchone()
+        if user:
+            nombre = user['nombre_cliente']
+            apellidos = user['apellidos_cliente']
+            password_db = user['password_cliente']
+            if password == password_db:
+                token = 'token-generado-aqui'
+                return jsonify({
+                    'success': True,
+                    'token': token,
+                    'user': {
+                        'name': nombre,
+                        'lastname': apellidos,
+                        'email': email
+                    }
+                }), 200
+            else:
+                return jsonify({'success': False, 'message': 'Contraseña incorrecta'}), 401
+        else:
+            return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return jsonify({'success': False, 'message': 'Error en el servidor'}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route('/api/clientes', methods=['POST'])
 @swag_from({
