@@ -8,29 +8,48 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-MYSQL_CONFIG = {
-    'host': os.environ.get('MYSQL_HOST', 'bd-ferramas-producto.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
-    'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
-    'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
-    'database': os.environ.get('MYSQL_DATABASE', 'ferremasBD_Prod'),
-    'port': int(os.environ.get('MYSQL_PORT', 3306)),
-    'cursorclass': pymysql.cursors.DictCursor
+DATABASE_CONFIGS = {
+    'producto': {
+        'host': os.environ.get('MYSQL_HOST', 'ferremax.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
+        'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
+        'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
+        'database': os.environ.get('MYSQL_DATABASE_PRODUCTO', 'Producto'),
+        'port': int(os.environ.get('MYSQL_PORT', 3306)),
+        'cursorclass': pymysql.cursors.DictCursor
+    },
+    'cliente': {
+        'host': os.environ.get('MYSQL_HOST', 'ferremax.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
+        'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
+        'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
+        'database': os.environ.get('MYSQL_DATABASE_CLIENTE', 'Cliente'),
+        'port': int(os.environ.get('MYSQL_PORT', 3306)),
+        'cursorclass': pymysql.cursors.DictCursor
+    },
+    'empleado': {
+        'host': os.environ.get('MYSQL_HOST', 'ferremax.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
+        'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
+        'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
+        'database': os.environ.get('MYSQL_DATABASE_EMPLEADO', 'Empleado'),
+        'port': int(os.environ.get('MYSQL_PORT', 3306)),
+        'cursorclass': pymysql.cursors.DictCursor
+    }
 }
-
 class DatabaseError(Exception):
    pass
+MYSQL_CONFIG = DATABASE_CONFIGS['producto']
 
-def get_db_connection():
+def get_db_connection(database_type: str = 'producto'):
+    if database_type not in DATABASE_CONFIGS:
+        raise ValueError(f"Tipo de base de datos no válido: {database_type}. Opciones: {list(DATABASE_CONFIGS.keys())}")
     try:
-        connection = pymysql.connect(**MYSQL_CONFIG)
+        connection = pymysql.connect(**DATABASE_CONFIGS[database_type])
         return connection
     except pymysql.MySQLError as e:
-        error_msg = f"Problema al conectar con AWS: {e}"
+        error_msg = f"Problema al conectar con AWS ({database_type}): {e}"
         raise DatabaseError(error_msg)
 
-def execute_query(query: str, params: tuple = None, fetch: bool = True) -> Union[List[Dict], Dict, int]:
-    connection = get_db_connection()
+def execute_query(query: str, params: tuple = None, fetch: bool = True, database_type: str = 'producto') -> Union[List[Dict], Dict, int]:
+    connection = get_db_connection(database_type)
     try:
         with connection.cursor() as cursor:
             cursor.execute(query, params)            
@@ -43,7 +62,7 @@ def execute_query(query: str, params: tuple = None, fetch: bool = True) -> Union
     except pymysql.MySQLError as e:
         if not fetch:
             connection.rollback()
-        error_msg = f"Respuesta:{e}"
+        error_msg = f"Respuesta ({database_type}): {e}"
         raise DatabaseError(error_msg)
     finally:
         connection.close()
@@ -52,7 +71,7 @@ def execute_query(query: str, params: tuple = None, fetch: bool = True) -> Union
         
 def get_productos() -> List[Dict[str, Any]]:
     query = "SELECT * FROM Producto"
-    productos = execute_query(query)
+    productos = execute_query(query, database_type='producto')
     
     for producto in productos:
         if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
@@ -65,9 +84,8 @@ def get_producto(id_producto: str) -> Optional[Dict[str, Any]]:
     if not isinstance(id_producto, str) or len(id_producto) > 12:
         raise ValueError("El id_producto debe ser de  hasta 12 caracteres")
     query = "SELECT * FROM Producto WHERE id_producto = %s"
-    result = execute_query(query, (id_producto,))
+    result = execute_query(query, (id_producto,), database_type='producto')
     return result[0] if result else None
-
 
 def crear_producto(
     id_producto: str,
@@ -103,7 +121,7 @@ def crear_producto(
 
     query = """INSERT INTO Producto (id_producto, nom_prod, descr_prod, precio, marca, stock, id_categoria, img_prod)VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
     params = (id_producto, nom_prod, descr_prod, precio, marca, stock, id_categoria, img_prod)
-    execute_query(query, params, fetch=False)
+    execute_query(query, params, fetch=False, database_type='producto')
 
     return get_producto(id_producto)
 
@@ -152,7 +170,7 @@ def modificar_producto(id_producto: str, data: Dict[str, Any]) -> Dict[str, Any]
     set_clause = ', '.join([f"{key} = %s" for key in processed_data.keys()])
     values = tuple(list(processed_data.values()) + [id_producto])
     query = f"UPDATE Producto SET {set_clause} WHERE id_producto = %s"
-    execute_query(query, values, fetch=False)
+    execute_query(query, values, fetch=False, database_type='producto')
     return get_producto(id_producto)
 
 
@@ -167,12 +185,13 @@ def eliminar_producto(id_producto: str) -> Dict[str, Any]:
     query = "DELETE FROM Producto WHERE id_producto = %s"
     params = (id_producto,)
     
-    rows_affected = execute_query(query, params, fetch=False)
+    rows_affected = execute_query(query, params, fetch=False, database_type='producto')
     
     if rows_affected == 0:
         raise DatabaseError("No se pudo eliminar el producto")
     
     return {"message": f"Producto eliminado correctamente"}
+
 
 
 def login(email_cliente: str, password_cliente: str) -> Optional[Dict[str, Any]]:    
@@ -182,7 +201,7 @@ def login(email_cliente: str, password_cliente: str) -> Optional[Dict[str, Any]]
         raise ValueError("La password_cliente debe ser de hasta 20 caracteres")
         
     query = "SELECT * FROM clientes WHERE email_cliente = %s"
-    result = execute_query(query, (email_cliente,))
+    result = execute_query(query, (email_cliente,), database_type='cliente')
         
     if not result:
         return None
@@ -197,7 +216,7 @@ def get_cliente(email_cliente: str) -> Optional[Dict[str, Any]]:
     if not isinstance(email_cliente, str) or len(email_cliente) > 40:
         raise ValueError("Formato no válido")
     query = "SELECT * FROM clientes WHERE email_cliente = %s"
-    result = execute_query(query, (email_cliente,))
+    result = execute_query(query, (email_cliente,), database_type='cliente')
     return result[0] if result else None
 
 
@@ -229,9 +248,10 @@ def registro_cliente(
     query = """INSERT INTO clientes (run_cliente, dvrun_cliente, nombre_cliente, apellidos_cliente, 
                email_cliente, password_cliente) VALUES (%s, %s, %s, %s, %s, %s)"""
     params = (run_cliente, dvrun_cliente, nombre_cliente, apellidos_cliente, email_cliente, password_cliente)
-    execute_query(query, params, fetch=False)
+    execute_query(query, params, fetch=False, database_type='cliente')
 
     return get_cliente(email_cliente)
+
 """weas para usar las funciones en flask"""
 
 
