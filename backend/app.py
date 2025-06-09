@@ -3,19 +3,22 @@ from flask import Flask, request, jsonify, redirect, render_template
 from flask_cors import CORS
 from flasgger import Swagger, swag_from
 import logging
+import pymysql
 from transbank.webpay.webpay_plus.transaction import Transaction
 from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import WebpayOptions
 import mysql.connector
 
 from config import (
+    DatabaseError,
     flask_get_productos,
     flask_get_producto,
     flask_crear_producto,
     flask_modificar_producto,
     flask_eliminar_producto,
     flask_login,
-    flask_crear_cliente
+    flask_crear_cliente,
+    get_db_connection
 )
 
 app = Flask(__name__)
@@ -230,24 +233,28 @@ def eliminar_producto(id_producto):
         }
     }
 })
-def flask_login():
+def login():    
     email = request.args.get('email')
     password = request.args.get('password')
-    try:
-        conn = mysql.connector.connect(
-            host='bd-ferramas-producto.crwi4crvnqsy.us-east-1.rds.amazonaws.com',
-            user='Ferremas_adm',
-            password='C.AdmFerremas',
-            database='ferremasBD_Prod'
-        )
-        cursor = conn.cursor(dictionary=True)
-        query = "SELECT nombre_cliente, apellidos_cliente, password_cliente FROM clientes WHERE email_cliente = %s"
+    
+    if not email or not password:
+        return jsonify({'success': False, 'message': 'Email y contraseña son requeridos'}), 400
+
+    connection = None
+    cursor = None
+    try:        
+        connection = get_db_connection(database_type='cliente')        
+        cursor = connection.cursor()
+        
+        query = "SELECT nombre_cliente, apellidos_cliente, password_cliente FROM Cliente WHERE email_cliente = %s"
         cursor.execute(query, (email,))
         user = cursor.fetchone()
+
         if user:
             nombre = user['nombre_cliente']
             apellidos = user['apellidos_cliente']
             password_db = user['password_cliente']
+
             if password == password_db:
                 token = 'token-generado-aqui'
                 return jsonify({
@@ -263,16 +270,25 @@ def flask_login():
                 return jsonify({'success': False, 'message': 'Contraseña incorrecta'}), 401
         else:
             return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        return jsonify({'success': False, 'message': 'Error en el servidor'}), 500
-    finally:
-        cursor.close()
-        conn.close()
 
-@app.route('/api/clientes', methods=['POST'])
+    except pymysql.MySQLError as err:
+        print(f"Error de base de datos: {err}")
+        return jsonify({'success': False, 'message': 'Error en el servidor'}), 500
+    except DatabaseError as err:
+        print(f"Error personalizado: {err}")
+        return jsonify({'success': False, 'message': 'Error en el servidor'}), 500
+    except Exception as err:
+        print(f"Error inesperado: {err}")
+        return jsonify({'success': False, 'message': 'Error inesperado en el servidor'}), 500
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None and connection.open:
+            connection.close()
+
+@app.route('/api/Cliente', methods=['POST'])
 @swag_from({
-    'tags': ['Clientes'],
+    'tags': ['Cliente'],
     'summary': 'Crea un nuevo cliente',
     'parameters': [
         {
@@ -282,9 +298,12 @@ def flask_login():
             'schema': {
                 'type': 'object',
                 'properties': {
-                    'nombre': {'type': 'string'},
-                    'email': {'type': 'string'},
-                    'password': {'type': 'string'}
+                    'run_cliente': {'type': 'string'},
+                    'dvrun_cliente': {'type': 'string'},
+                    'nombre_cliente': {'type': 'string'},
+                    'apellidos_cliente': {'type': 'string'},
+                    'email_cliente': {'type': 'string'},
+                    'password_cliente': {'type': 'string'}
                 }
             }
         }
@@ -295,7 +314,6 @@ def flask_login():
         }
     }
 })
-
 def crear_cliente():
     data = request.get_json()
     return flask_crear_cliente(data)
@@ -324,10 +342,6 @@ def crear_transaccion():
             return_url=RETURN_URL
         )
         
-        # Mostrar la respuesta para debugging
-        logger.debug(f"Respuesta de WebPay: {response}")
-        
-        # Verificamos si la respuesta es un diccionario y extraemos los datos correctamente
         if isinstance(response, dict):
             token = response.get("token")
             url = response.get("url")
@@ -359,15 +373,11 @@ def webpay_return():
     if not token:
         return jsonify({"error": "Token no recibido"}), 400
     
-    try:
-        # Configurar opciones de WebPay
+    try:        
         options = WebpayOptions(COMMERCE_CODE, API_KEY, INTEGRATION_TYPE)
-        
-        # Confirmar transacción
         tx = Transaction(options)
         response = tx.commit(token)
-        
-        # Extracción segura de datos
+
         if isinstance(response, dict):
             buy_order = response.get("buy_order")
             amount = response.get("amount")
@@ -379,8 +389,7 @@ def webpay_return():
         redirect_url = f"{FINAL_URL}?token={token}&status=success&order={buy_order}&amount={amount}"
         return redirect(redirect_url)
     
-    except Exception as e:
-        # Error en la transacción, redirigir con error
+    except Exception as e:        
         redirect_url = f"{FINAL_URL}?status=error&message={str(e)}"
         return redirect(redirect_url)
 
@@ -394,15 +403,13 @@ def estado_transaccion():
     if not token:
         return jsonify({"error": "Token no proporcionado"}), 400
     
-    try:
-        # Configurar opciones de WebPay
+    try:        
         options = WebpayOptions(COMMERCE_CODE, API_KEY, INTEGRATION_TYPE)
         
-        # Consultar estado
+
         tx = Transaction(options)
         response = tx.status(token)
         
-        # Extracción segura de datos
         if isinstance(response, dict):
             estado = response.get("status")
             orden_compra = response.get("buy_order")
@@ -440,14 +447,13 @@ def anular_transaccion():
         if not token or not monto:
             return jsonify({"error": "Debe proporcionar token y monto"}), 400
         
-        # Configurar opciones de WebPay
+    
         options = WebpayOptions(COMMERCE_CODE, API_KEY, INTEGRATION_TYPE)
         
-        # Anular transacción
+    
         tx = Transaction(options)
         response = tx.refund(token, monto)
-        
-        # Extracción segura de datos
+                
         if isinstance(response, dict):
             tipo_respuesta = response.get("type")
             codigo_autorizacion = response.get("authorization_code")
@@ -471,6 +477,6 @@ def anular_transaccion():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-

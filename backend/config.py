@@ -200,7 +200,7 @@ def login(email_cliente: str, password_cliente: str) -> Optional[Dict[str, Any]]
     if not isinstance(password_cliente, str) or len(password_cliente) > 20:
         raise ValueError("La password_cliente debe ser de hasta 20 caracteres")
         
-    query = "SELECT * FROM clientes WHERE email_cliente = %s"
+    query = "SELECT * FROM Cliente WHERE email_cliente = %s"
     result = execute_query(query, (email_cliente,), database_type='cliente')
         
     if not result:
@@ -215,7 +215,7 @@ def login(email_cliente: str, password_cliente: str) -> Optional[Dict[str, Any]]
 def get_cliente(email_cliente: str) -> Optional[Dict[str, Any]]:
     if not isinstance(email_cliente, str) or len(email_cliente) > 40:
         raise ValueError("Formato no válido")
-    query = "SELECT * FROM clientes WHERE email_cliente = %s"
+    query = "SELECT * FROM Cliente WHERE email_cliente = %s"
     result = execute_query(query, (email_cliente,), database_type='cliente')
     return result[0] if result else None
 
@@ -245,7 +245,7 @@ def registro_cliente(
     if cliente_existente:
         raise ValueError("Email ya registrado")
 
-    query = """INSERT INTO clientes (run_cliente, dvrun_cliente, nombre_cliente, apellidos_cliente, 
+    query = """INSERT INTO Cliente (run_cliente, dvrun_cliente, nombre_cliente, apellidos_cliente, 
                email_cliente, password_cliente) VALUES (%s, %s, %s, %s, %s, %s)"""
     params = (run_cliente, dvrun_cliente, nombre_cliente, apellidos_cliente, email_cliente, password_cliente)
     execute_query(query, params, fetch=False, database_type='cliente')
