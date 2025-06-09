@@ -70,9 +70,7 @@ function NavbarF() {
             <div className="d-none d-lg-flex align-items-center me-3">
               {isLoggedIn && (<span className="text-white me-3 d-flex align-items-center">
                 <AiOutlineUser className="user-icon me-1" />
-                {rol === 'admin'
-                  ? 'Administrador'
-                  : `${user?.name ?? ''} ${user?.lastname ?? ''}`.trim() || 'Usuario'}
+                {`${user?.name ?? ''} ${user?.lastname ?? ''}`.trim() || 'Usuario'}
               </span>)}
 
               <Nav className="align-items-center">

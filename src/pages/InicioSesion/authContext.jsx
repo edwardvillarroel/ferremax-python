@@ -25,7 +25,17 @@ export const AuthProvider = ({ children }) => {
 
   // Ahora login recibe el usuario real desde el backend
   const login = (token, userRol, userData) => {
-    // userData debe tener { name, lastname, email }
+    // Si userRol viene vacío o null, lo detectamos según userData
+    let finalRol = userRol;
+    if (!finalRol) {
+      if (userData.cargo !== undefined) {
+        // Si viene 'cargo' es empleado
+        finalRol = userData.cargo === 1 ? 'admin' : 'empleado';
+      } else {
+        finalRol = 'cliente';
+      }
+    }
+
     const userToStore = {
       name: userData.name,
       lastname: userData.lastname,
@@ -33,11 +43,11 @@ export const AuthProvider = ({ children }) => {
     };
 
     localStorage.setItem('token', token);
-    localStorage.setItem('rol', userRol);
+    localStorage.setItem('rol', finalRol);
     localStorage.setItem('user', JSON.stringify(userToStore));
 
     setIsLoggedIn(true);
-    setRol(userRol);
+    setRol(finalRol);
     setUser(userToStore);
   };
 

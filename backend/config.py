@@ -219,6 +219,29 @@ def get_cliente(email_cliente: str) -> Optional[Dict[str, Any]]:
     result = execute_query(query, (email_cliente,), database_type='cliente')
     return result[0] if result else None
 
+def login_empleado(correo_emp: str, password_emp: str) -> Optional[Dict[str, Any]]:
+    if not isinstance(correo_emp, str) or len(correo_emp) > 40:
+        raise ValueError("El correo_emp debe ser de hasta 40 caracteres")
+    if not isinstance(password_emp, str) or len(password_emp) > 20:
+        raise ValueError("La password_emp debe ser de hasta 20 caracteres")
+        
+    query = "SELECT * FROM Empleado WHERE correo_emp = %s"
+    result = execute_query(query, (correo_emp,), database_type='empleado')
+        
+    if not result:
+        return None
+    
+    empleado = result[0]
+    if empleado['password_emp'] == password_emp:
+        return empleado
+    return None
+
+def get_empleado(correo_emp: str) -> Optional[Dict[str, Any]]:
+    if not isinstance(correo_emp, str) or len(correo_emp) > 40:
+        raise ValueError("Formato no válido")
+    query = "SELECT * FROM Empleado WHERE correo_emp = %s"
+    result = execute_query(query, (correo_emp,), database_type='empleado')
+
 
 def registro_cliente(
     run_cliente: str,
@@ -260,6 +283,21 @@ def flask_login(email_cliente: str, password_cliente: str) -> Tuple[Dict, int]:
         cliente = login(email_cliente, password_cliente)
         if cliente:
             return {"data": cliente}, 200
+        else:
+            return {"error": "correo o contraseña incorrectos"}, 401
+    except ValueError as e:
+        return {"error": str(e)}, 400
+    except DatabaseError as e:
+        return {"error": str(e)}, 500
+    except Exception as e:
+        return {"error": f"Error: {str(e)}"}, 500
+    
+
+def flask_login_empleado(correo_emp: str, password_emp: str) -> Tuple[Dict, int]:
+    try:
+        empleado = login_empleado(correo_emp, password_emp)
+        if empleado:
+            return {"data": empleado}, 200
         else:
             return {"error": "correo o contraseña incorrectos"}, 401
     except ValueError as e:

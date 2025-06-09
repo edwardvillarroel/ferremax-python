@@ -8,6 +8,7 @@ from transbank.webpay.webpay_plus.transaction import Transaction
 from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import WebpayOptions
 import mysql.connector
+from config import flask_login, flask_login_empleado
 
 from config import (
     DatabaseError,
@@ -207,7 +208,7 @@ def modificar_producto(id_producto):
 def eliminar_producto(id_producto):
     return flask_eliminar_producto(id_producto)
 
-@app.route('/api/login', methods=['GET'])
+@app.route('/api/login-empleado', methods=['GET'])
 @swag_from({
     'tags': ['Autenticación'],
     'summary': 'Inicia sesión de usuario',
@@ -233,7 +234,64 @@ def eliminar_producto(id_producto):
         }
     }
 })
-def login():    
+
+def login_empleado():
+    email = request.args.get('email')
+    password = request.args.get('password')
+    
+    if not email or not password:
+        return jsonify({'success': False, 'message': 'Email y contraseña son requeridos'}), 400
+
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection(database_type='empleado')  # Ajusta si usas otro tipo
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        
+        query = """
+            SELECT pnom_emp, snom_emp, appat_emp, apmat_emp, correo_emp, id_cargo, password_emp
+            FROM Empleado
+            WHERE correo_emp = %s
+        """
+        cursor.execute(query, (email,))
+        user = cursor.fetchone()
+
+        if user:
+            password_db = user.get('password_emp')
+            if password == password_db:
+                token = 'token-generado-aqui'
+                return jsonify({
+                    'success': True,
+                    'token': token,
+                    'user': {
+                        'name': user['pnom_emp'],
+                        'lastname': user['appat_emp'],
+                        'email': user['correo_emp'],
+                        'cargo': user['id_cargo']
+                    }
+                }), 200
+            else:
+                return jsonify({'success': False, 'message': 'Contraseña incorrecta'}), 401
+        else:
+            return jsonify({'success': False, 'message': 'Empleado no encontrado'}), 404
+
+    except pymysql.MySQLError as err:
+        print(f"Error de base de datos: {err}")
+        return jsonify({'success': False, 'message': 'Error en el servidor'}), 500
+    except DatabaseError as err:
+        print(f"Error personalizado: {err}")
+        return jsonify({'success': False, 'message': 'Error en el servidor'}), 500
+    except Exception as err:
+        print(f"Error inesperado: {err}")
+        return jsonify({'success': False, 'message': 'Error inesperado en el servidor'}), 500
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None and connection.open:
+            connection.close()
+
+@app.route('/api/login', methods=['GET'])
+def login():
     email = request.args.get('email')
     password = request.args.get('password')
     
@@ -244,9 +302,9 @@ def login():
     cursor = None
     try:        
         connection = get_db_connection(database_type='cliente')        
-        cursor = connection.cursor()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
         
-        query = "SELECT nombre_cliente, apellidos_cliente, password_cliente FROM Cliente WHERE email_cliente = %s"
+        query = "SELECT nombre_cliente, apellidos_cliente, password_cliente, email_cliente FROM Cliente WHERE email_cliente = %s"
         cursor.execute(query, (email,))
         user = cursor.fetchone()
 
@@ -263,7 +321,7 @@ def login():
                     'user': {
                         'name': nombre,
                         'lastname': apellidos,
-                        'email': email
+                        'email': user['email_cliente']
                     }
                 }), 200
             else:
