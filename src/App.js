@@ -8,8 +8,8 @@ import InicioPage from './pages/InicioSesion/InicioPage';
 import RegistroUser from './pages/Registro/Registro';
 import CarritoPage from './pages/Carrito/Carrito';
 import AdminPage from './pages/Admin/Admin';
-import WebpayCheckout from './components/webPay/webPayCheckout';
-import ResultadoPago from './components/webPay/resultadoPago';
+import TransbankPayment from './components/webPay/pagoTransbank';
+import PaymentResult from './components/webPay/resultadoPago';
 import ProductoPage from './pages/Productos/ProductoPage';
 
 
@@ -50,8 +50,8 @@ function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/TuCarrito" element={<CarritoPage />} />
           <Route path="/Producto" element={<ProductoPage />} />
-          <Route path="/webPay" element={<WebpayCheckout />} />
-          <Route path="/resultado" element={<ResultadoPago />} />
+          <Route path="/webPay" element={<TransbankPayment />} />
+          <Route path="/resultado" element={<PaymentResult />} />
         </Routes>
       </main>
       <FooterFerremax />

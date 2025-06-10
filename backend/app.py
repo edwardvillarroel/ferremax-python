@@ -1,13 +1,18 @@
-import os
-from flask import Flask, request, jsonify, redirect, render_template
-from flask_cors import CORS
-from flasgger import Swagger, swag_from
-import logging
-import pymysql
+# Importaciones necesarias para el funcionamiento de la aplicación
+import datetime  # Para manejar fechas y horas
+import os        # Para interactuar con el sistema operativo
+import uuid      # Para generar identificadores únicos
+from flask import Flask, request, jsonify, redirect, render_template  # Framework web Flask
+from flask_cors import CORS  # Para habilitar CORS (Cross-Origin Resource Sharing)
+from flasgger import Swagger, swag_from  # Para documentación automática de API
+import logging   # Para logging y registro de eventos
+import pymysql   # Conector para base de datos MySQL
+# Importaciones específicas de Transbank para pagos
 from transbank.webpay.webpay_plus.transaction import Transaction
 from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import WebpayOptions
-import mysql.connector
+import mysql.connector  # Otro conector para MySQL
+# Importaciones desde archivo de configuración local
 from config import flask_login, flask_login_empleado
 
 from config import (
@@ -22,48 +27,61 @@ from config import (
     get_db_connection
 )
 
+# Inicialización de la aplicación Flask
 app = Flask(__name__)
+# Habilitar CORS para permitir peticiones desde otros dominios
 CORS(app)
 
+# Configuración del sistema de logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO,  # Nivel de logging
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Formato de los mensajes
 )
 
+# Crear logger específico para esta aplicación
 logger = logging.getLogger(__name__)
 
-COMMERCE_CODE = "597055555532"
-API_KEY = "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C"
-INTEGRATION_TYPE = IntegrationType.TEST
+# Configuración de Transbank para pagos (ambiente de pruebas)
+COMMERCE_CODE = "597055555532"  # Código de comercio proporcionado por Transbank
+API_KEY = "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C"  # Llave API
+INTEGRATION_TYPE = IntegrationType.TEST  # Tipo de integración (TEST para pruebas)
 
-RETURN_URL = "http://localhost:5000/api/webpay/retorno"
-FINAL_URL = "http://localhost:3001/resultado"
+# Diccionario para almacenar transacciones en memoria (temporal)
+transactions = {}
 
+# URLs para el flujo de pagos
+RETURN_URL = "http://localhost:5000/api/webpay/retorno"  # URL donde Transbank envía la respuesta
+FINAL_URL = "http://localhost:3001/resultado"  # URL final donde se redirige al usuario
+
+# Configuración de Swagger para documentación de la API
 swagger_config = {
-    "headers": [],
+    "headers": [],  # Headers adicionales
     "specs": [
         {
-            "endpoint": 'apispec',
-            "route": '/apispec.json',
-            "rule_filter": lambda rule: True,
-            "model_filter": lambda tag: True,
+            "endpoint": 'apispec',  # Endpoint para las especificaciones
+            "route": '/apispec.json',  # Ruta del archivo JSON de especificaciones
+            "rule_filter": lambda rule: True,  # Filtro para rutas (incluir todas)
+            "model_filter": lambda tag: True,  # Filtro para modelos (incluir todos)
         }
     ],
-    "static_url_path": "/flasgger_static",
-    "swagger_ui": True,
-    "specs_route": "/docs/"
+    "static_url_path": "/flasgger_static",  # Path para archivos estáticos de Swagger
+    "swagger_ui": True,  # Habilitar interfaz de usuario de Swagger
+    "specs_route": "/docs/"  # Ruta donde se mostrará la documentación
 }
 
+# Inicializar Swagger con la configuración
 swagger = Swagger(app, config=swagger_config)
 
-@app.route('/api/productos', methods=['GET'])
-@swag_from({
-    'tags': ['Productos'],
-    'summary': 'Obtiene todos los productos',
-    'responses': {
+# ENDPOINTS DE PRODUCTOS
+
+@app.route('/api/productos', methods=['GET'])  # Endpoint para obtener todos los productos
+@swag_from({  # Decorador para documentación de Swagger
+    'tags': ['Productos'],  # Categoría en la documentación
+    'summary': 'Obtiene todos los productos',  # Resumen del endpoint
+    'responses': {  # Posibles respuestas
         200: {
             'description': 'Lista de productos obtenida exitosamente',
-            'schema': {
+            'schema': {  # Esquema de la respuesta
                 'type': 'object',
                 'properties': {
                     'data': {
@@ -88,19 +106,20 @@ swagger = Swagger(app, config=swagger_config)
     }
 })
 def get_productos():
+    # Delega la lógica a una función importada del módulo config
     return flask_get_productos()
 
-@app.route('/api/productos/<id_producto>', methods=['GET'])
+@app.route('/api/productos/<id_producto>', methods=['GET'])  # Endpoint para obtener un producto específico
 @swag_from({
     'tags': ['Productos'],
     'summary': 'Obtiene un producto específico',
-    'parameters': [
+    'parameters': [  # Parámetros requeridos
         {
-            'name': 'id_producto',
-            'in': 'path',
-            'type': 'string',
-            'required': True,
-            'description': 'ID del producto a buscar'
+            'name': 'id_producto',  # Nombre del parámetro
+            'in': 'path',  # Ubicación del parámetro (en la URL)
+            'type': 'string',  # Tipo de dato
+            'required': True,  # Si es obligatorio
+            'description': 'ID del producto a buscar'  # Descripción
         }
     ],
     'responses': {
@@ -110,18 +129,19 @@ def get_productos():
     }
 })
 def get_producto(id_producto):
+    # Delega la lógica a una función importada, pasando el ID del producto
     return flask_get_producto(id_producto)
 
-@app.route('/api/productos', methods=['POST'])
+@app.route('/api/productos', methods=['POST'])  # Endpoint para crear un nuevo producto
 @swag_from({
     'tags': ['Productos'],
     'summary': 'Crea un nuevo producto',
     'parameters': [
         {
-            'name': 'producto',
+            'name': 'producto',  # Parámetro en el body de la petición
             'in': 'body',
             'required': True,
-            'schema': {
+            'schema': {  # Esquema del objeto producto
                 'type': 'object',
                 'properties': {
                     'id_producto': {'type': 'string'},
@@ -143,23 +163,23 @@ def get_producto(id_producto):
     }
 })
 def crear_producto():
-    data = request.get_json()
-    return flask_crear_producto(data)
+    data = request.get_json()  # Obtener datos JSON del body de la petición
+    return flask_crear_producto(data)  # Delegar a función importada
 
-@app.route('/api/productos/<id_producto>', methods=['PUT'])
+@app.route('/api/productos/<id_producto>', methods=['PUT'])  # Endpoint para modificar producto existente
 @swag_from({
     'tags': ['Productos'],
     'summary': 'Modifica un producto existente',
     'parameters': [
         {
-            'name': 'id_producto',
+            'name': 'id_producto',  # ID del producto en la URL
             'in': 'path',
             'type': 'string',
             'required': True,
             'description': 'ID del producto a modificar'
         },
         {
-            'name': 'producto',
+            'name': 'producto',  # Datos del producto en el body
             'in': 'body',
             'required': True,
             'schema': {
@@ -183,10 +203,10 @@ def crear_producto():
     }
 })
 def modificar_producto(id_producto):
-    data = request.get_json()
-    return flask_modificar_producto(id_producto, data)
+    data = request.get_json()  # Obtener datos JSON del body
+    return flask_modificar_producto(id_producto, data)  # Delegar con ID y datos
 
-@app.route('/api/productos/<id_producto>', methods=['DELETE'])
+@app.route('/api/productos/<id_producto>', methods=['DELETE'])  # Endpoint para eliminar producto
 @swag_from({
     'tags': ['Productos'],
     'summary': 'Elimina un producto',
@@ -206,22 +226,24 @@ def modificar_producto(id_producto):
     }
 })
 def eliminar_producto(id_producto):
-    return flask_eliminar_producto(id_producto)
+    return flask_eliminar_producto(id_producto)  # Delegar a función importada
 
-@app.route('/api/login-empleado', methods=['GET'])
+# ENDPOINTS DE AUTENTICACIÓN
+
+@app.route('/api/login-empleado', methods=['GET'])  # Login para empleados
 @swag_from({
     'tags': ['Autenticación'],
     'summary': 'Inicia sesión de usuario',
     'parameters': [
         {
-            'name': 'email',
+            'name': 'email',  # Email como parámetro de consulta
             'in': 'query',
             'type': 'string',
             'required': True,
             'description': 'Correo electrónico del usuario'
         },
         {
-            'name': 'password',
+            'name': 'password',  # Password como parámetro de consulta
             'in': 'query',
             'type': 'string',
             'required': True,
@@ -234,32 +256,38 @@ def eliminar_producto(id_producto):
         }
     }
 })
-
 def login_empleado():
+    # Obtener parámetros de la URL
     email = request.args.get('email')
     password = request.args.get('password')
     
+    # Validar que los parámetros estén presentes
     if not email or not password:
         return jsonify({'success': False, 'message': 'Email y contraseña son requeridos'}), 400
 
+    # Inicializar variables para manejo de conexión
     connection = None
     cursor = None
     try:
-        connection = get_db_connection(database_type='empleado')  # Ajusta si usas otro tipo
+        # Obtener conexión a la base de datos de empleados
+        connection = get_db_connection(database_type='empleado')
+        # Crear cursor con formato de diccionario
         cursor = connection.cursor(pymysql.cursors.DictCursor)
         
+        # Query SQL para buscar empleado por email
         query = """
             SELECT pnom_emp, snom_emp, appat_emp, apmat_emp, correo_emp, id_cargo, password_emp
             FROM Empleado
             WHERE correo_emp = %s
         """
-        cursor.execute(query, (email,))
-        user = cursor.fetchone()
+        cursor.execute(query, (email,))  # Ejecutar query con parámetro
+        user = cursor.fetchone()  # Obtener primer resultado
 
-        if user:
-            password_db = user.get('password_emp')
-            if password == password_db:
-                token = 'token-generado-aqui'
+        if user:  # Si se encontró el usuario
+            password_db = user.get('password_emp')  # Obtener contraseña de BD
+            if password == password_db:  # Comparar contraseñas (sin hash - no recomendado)
+                token = 'token-generado-aqui'  # Generar token (simplificado)
+                # Retornar respuesta exitosa con datos del usuario
                 return jsonify({
                     'success': True,
                     'token': token,
@@ -271,10 +299,13 @@ def login_empleado():
                     }
                 }), 200
             else:
+                # Contraseña incorrecta
                 return jsonify({'success': False, 'message': 'Contraseña incorrecta'}), 401
         else:
+            # Usuario no encontrado
             return jsonify({'success': False, 'message': 'Empleado no encontrado'}), 404
 
+    # Manejo de diferentes tipos de errores
     except pymysql.MySQLError as err:
         print(f"Error de base de datos: {err}")
         return jsonify({'success': False, 'message': 'Error en el servidor'}), 500
@@ -285,36 +316,44 @@ def login_empleado():
         print(f"Error inesperado: {err}")
         return jsonify({'success': False, 'message': 'Error inesperado en el servidor'}), 500
     finally:
+        # Cerrar cursor y conexión para liberar recursos
         if cursor is not None:
             cursor.close()
         if connection is not None and connection.open:
             connection.close()
 
-@app.route('/api/login', methods=['GET'])
+@app.route('/api/login', methods=['GET'])  # Login para clientes
 def login():
+    # Obtener credenciales de los parámetros de la URL
     email = request.args.get('email')
     password = request.args.get('password')
     
+    # Validar presencia de credenciales
     if not email or not password:
         return jsonify({'success': False, 'message': 'Email y contraseña son requeridos'}), 400
 
+    # Inicializar variables de conexión
     connection = None
     cursor = None
     try:        
+        # Conexión a base de datos de clientes
         connection = get_db_connection(database_type='cliente')        
         cursor = connection.cursor(pymysql.cursors.DictCursor)
         
+        # Query para buscar cliente por email
         query = "SELECT nombre_cliente, apellidos_cliente, password_cliente, email_cliente FROM Cliente WHERE email_cliente = %s"
         cursor.execute(query, (email,))
         user = cursor.fetchone()
 
-        if user:
+        if user:  # Si el usuario existe
+            # Extraer datos del usuario
             nombre = user['nombre_cliente']
             apellidos = user['apellidos_cliente']
             password_db = user['password_cliente']
 
-            if password == password_db:
-                token = 'token-generado-aqui'
+            if password == password_db:  # Verificar contraseña
+                token = 'token-generado-aqui'  # Token simplificado
+                # Respuesta exitosa
                 return jsonify({
                     'success': True,
                     'token': token,
@@ -329,6 +368,7 @@ def login():
         else:
             return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
 
+    # Manejo de errores similar al login de empleados
     except pymysql.MySQLError as err:
         print(f"Error de base de datos: {err}")
         return jsonify({'success': False, 'message': 'Error en el servidor'}), 500
@@ -339,12 +379,15 @@ def login():
         print(f"Error inesperado: {err}")
         return jsonify({'success': False, 'message': 'Error inesperado en el servidor'}), 500
     finally:
+        # Limpieza de recursos
         if cursor is not None:
             cursor.close()
         if connection is not None and connection.open:
             connection.close()
 
-@app.route('/api/Cliente', methods=['POST'])
+# ENDPOINT PARA CREAR CLIENTES
+
+@app.route('/api/Cliente', methods=['POST'])  # Crear nuevo cliente
 @swag_from({
     'tags': ['Cliente'],
     'summary': 'Crea un nuevo cliente',
@@ -353,7 +396,7 @@ def login():
             'name': 'cliente',
             'in': 'body',
             'required': True,
-            'schema': {
+            'schema': {  # Esquema del objeto cliente
                 'type': 'object',
                 'properties': {
                     'run_cliente': {'type': 'string'},
@@ -373,69 +416,88 @@ def login():
     }
 })
 def crear_cliente():
-    data = request.get_json()
-    return flask_crear_cliente(data)
+    data = request.get_json()  # Obtener datos JSON
+    return flask_crear_cliente(data)  # Delegar a función importada
 
-@app.route('/api/webpay/crear', methods=['POST'])
+# ENDPOINTS DE WEBPAY (TRANSBANK)
+
+@app.route('/api/webpay/crear_transaccion', methods=['POST'])  # Crear transacción de pago
 def crear_transaccion():
     try:
-        data = request.json
-        monto = data.get('monto')
-        orden_compra = data.get('orden_compra')
+        data = request.get_json()  # Obtener datos de la petición
         
-        logger.info(f"Iniciando transacción: monto={monto}, orden={orden_compra}")
+        # Validar que se envió el monto
+        if not data or 'amount' not in data:
+            return jsonify({
+                'error': 'Monto es requerido'
+            }), 400
         
-        if not monto or not orden_compra:
-            return jsonify({"error": "Debe proporcionar monto y orden_compra"}), 400
+        # Convertir monto a float y validar
+        amount = float(data['amount'])
+        if amount <= 0:
+            return jsonify({
+                'error': 'El monto debe ser mayor a 0'
+            }), 400
         
-        monto = int(monto)
+        # Generar identificadores únicos para la transacción
+        buy_order = str(uuid.uuid4())[:8]  # Orden de compra (8 caracteres)
+        session_id = str(uuid.uuid4())[:8]  # ID de sesión (8 caracteres)
         
-        options = WebpayOptions(COMMERCE_CODE, API_KEY, INTEGRATION_TYPE)
+        # URL de retorno personalizable o por defecto
+        return_url = data.get('return_url', 'http://localhost:3001/resultadoPago')
         
-        tx = Transaction(options)
-        response = tx.create(
-            buy_order=orden_compra,
-            session_id=f"sesion_{orden_compra}",
-            amount=monto,
-            return_url=RETURN_URL
+        # Crear transacción en Transbank
+        response = Transaction.create(
+            buy_order=buy_order,
+            session_id=session_id,
+            amount=amount,
+            return_url=return_url
         )
         
-        if isinstance(response, dict):
-            token = response.get("token")
-            url = response.get("url")
-            logger.info(f"Transacción creada como diccionario: token={token}, url={url}")
-        else:
-            token = response.token if hasattr(response, 'token') else None
-            url = response.url if hasattr(response, 'url') else None
-            logger.info(f"Transacción creada como objeto: token={token}, url={url}")
+        # Almacenar información de la transacción en memoria
+        transactions[buy_order] = {
+            'buy_order': buy_order,
+            'session_id': session_id,
+            'amount': amount,
+            'status': 'CREATED',  # Estado inicial
+            'created_at': datetime.datetime.now().isoformat(),  # Timestamp de creación
+            'token': response.token  # Token de Transbank
+        }
         
-        if not url or not token:
-            logger.error("URL o token no encontrados en la respuesta")
-            return jsonify({"error": "No se pudo obtener URL de pago"}), 500
-            
+        # Retornar información de la transacción creada
         return jsonify({
-            "url": url,
-            "token": token
+            'success': True,
+            'token': response.token,      # Token para el formulario de pago
+            'url': response.url,          # URL del formulario de Transbank
+            'buy_order': buy_order,       # Orden de compra generada
+            'amount': amount              # Monto de la transacción
         })
-    
+        
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # En caso de error, retornar mensaje de error
+        return jsonify({
+            'error': f'Error al crear transacción: {str(e)}'
+        }), 500
 
-@app.route('/api/webpay/retorno', methods=['GET', 'POST'])
+@app.route('/api/webpay/retorno', methods=['GET', 'POST'])  # Endpoint de retorno de WebPay
 def webpay_return():
     """
     Endpoint que recibe la respuesta de WebPay después del pago
     """
+    # Obtener token de la respuesta de WebPay
     token = request.args.get("token_ws")
     
     if not token:
         return jsonify({"error": "Token no recibido"}), 400
     
     try:        
+        # Configurar opciones de WebPay
         options = WebpayOptions(COMMERCE_CODE, API_KEY, INTEGRATION_TYPE)
         tx = Transaction(options)
+        # Confirmar la transacción con Transbank
         response = tx.commit(token)
 
+        # Extraer información de la respuesta (compatible con dict y objeto)
         if isinstance(response, dict):
             buy_order = response.get("buy_order")
             amount = response.get("amount")
@@ -443,75 +505,101 @@ def webpay_return():
             buy_order = response.buy_order if hasattr(response, "buy_order") else "unknown"
             amount = response.amount if hasattr(response, "amount") else 0
         
-        
+        # Redirigir al frontend con información del resultado
         redirect_url = f"{FINAL_URL}?token={token}&status=success&order={buy_order}&amount={amount}"
         return redirect(redirect_url)
     
     except Exception as e:        
+        # En caso de error, redirigir con mensaje de error
         redirect_url = f"{FINAL_URL}?status=error&message={str(e)}"
         return redirect(redirect_url)
 
-@app.route('/api/estado-transaccion', methods=['GET'])
-def estado_transaccion():
-    """
-    Endpoint para consultar el estado de una transacción
-    """
-    token = request.args.get('token')
-    
-    if not token:
-        return jsonify({"error": "Token no proporcionado"}), 400
-    
-    try:        
-        options = WebpayOptions(COMMERCE_CODE, API_KEY, INTEGRATION_TYPE)
+@app.route('/api/confirmar-transaccion', methods=['POST'])  # Confirmar transacción manualmente
+def confirmar_transaccion():
+    """Confirmar una transacción después del pago"""
+    try:
+        data = request.get_json()
+        token = data.get('token')
         
-
-        tx = Transaction(options)
-        response = tx.status(token)
+        if not token:
+            return jsonify({
+                'error': 'Token es requerido'
+            }), 400
         
-        if isinstance(response, dict):
-            estado = response.get("status")
-            orden_compra = response.get("buy_order")
-            monto = response.get("amount")
-            tarjeta = response.get("card_detail", {}).get("card_number") if isinstance(response.get("card_detail"), dict) else None
-            fecha_transaccion = response.get("transaction_date")
-        else:
-            estado = response.status if hasattr(response, "status") else "unknown"
-            orden_compra = response.buy_order if hasattr(response, "buy_order") else "unknown"
-            monto = response.amount if hasattr(response, "amount") else 0
-            tarjeta = response.card_detail.card_number if hasattr(response, "card_detail") and hasattr(response.card_detail, "card_number") else None
-            fecha_transaccion = response.transaction_date if hasattr(response, "transaction_date") else None
+        # Confirmar transacción con Transbank
+        response = Transaction.commit(token)
         
+        # Actualizar estado de la transacción en memoria
+        buy_order = response.buy_order
+        if buy_order in transactions:
+            transactions[buy_order].update({
+                'status': 'CONFIRMED' if response.status == 'AUTHORIZED' else 'FAILED',
+                'response_code': response.response_code,
+                'authorization_code': getattr(response, 'authorization_code', None),
+                'confirmed_at': datetime.datetime.now().isoformat()
+            })
+        
+        # Retornar información de la confirmación
         return jsonify({
-            "estado": estado,
-            "orden_compra": orden_compra,
-            "monto": monto,
-            "tarjeta": tarjeta,
-            "fecha_transaccion": fecha_transaccion
+            'success': True,
+            'buy_order': response.buy_order,
+            'status': response.status,
+            'amount': response.amount,
+            'response_code': response.response_code,
+            'authorization_code': getattr(response, 'authorization_code', None),
+            'transaction_date': getattr(response, 'transaction_date', None)
         })
-    
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            'error': f'Error al confirmar transacción: {str(e)}'
+        }), 500
+    
+@app.route('/api/transaction-status/<buy_order>', methods=['GET'])  # Obtener estado de transacción
+def get_transaction_status(buy_order):
+    """Obtener el estado de una transacción"""
+    # Verificar si la transacción existe en memoria
+    if buy_order not in transactions:
+        return jsonify({
+            'error': 'Transacción no encontrada'
+        }), 404
+    
+    # Retornar información de la transacción
+    return jsonify({
+        'success': True,
+        'transaction': transactions[buy_order]
+    })
 
-@app.route('/api/anular-transaccion', methods=['POST'])
+@app.route('/api/transactions', methods=['GET'])  # Obtener todas las transacciones
+def get_all_transactions():
+    """Obtener todas las transacciones"""
+    return jsonify({
+        'success': True,
+        'transactions': list(transactions.values())  # Convertir valores del dict a lista
+    })
+
+@app.route('/api/anular-transaccion', methods=['POST'])  # Anular/reembolsar transacción
 def anular_transaccion():
     """
     Endpoint para anular una transacción (opcional)
     """
     try:
-        data = request.json
+        data = request.json  # Obtener datos JSON
         token = data.get('token')
         monto = data.get('monto')
         
+        # Validar parámetros requeridos
         if not token or not monto:
             return jsonify({"error": "Debe proporcionar token y monto"}), 400
         
-    
+        # Configurar opciones de WebPay
         options = WebpayOptions(COMMERCE_CODE, API_KEY, INTEGRATION_TYPE)
         
-    
+        # Crear instancia de transacción
         tx = Transaction(options)
+        # Solicitar reembolso
         response = tx.refund(token, monto)
                 
+        # Extraer información de la respuesta (compatible con dict y objeto)
         if isinstance(response, dict):
             tipo_respuesta = response.get("type")
             codigo_autorizacion = response.get("authorization_code")
@@ -525,6 +613,7 @@ def anular_transaccion():
             codigo_respuesta = response.response_code if hasattr(response, "response_code") else "unknown"
             estado = response.status if hasattr(response, "status") else "unknown"
         
+        # Retornar información del reembolso
         return jsonify({
             "tipo_respuesta": tipo_respuesta,
             "codigo_autorizacion": codigo_autorizacion,
@@ -536,5 +625,9 @@ def anular_transaccion():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Punto de entrada de la aplicación
 if __name__ == '__main__':
+    # Ejecutar aplicación Flask en modo debug
+    # host='0.0.0.0' permite conexiones desde cualquier IP
+    # port=5000 define el puerto de escucha
     app.run(debug=True, host='0.0.0.0', port=5000)
