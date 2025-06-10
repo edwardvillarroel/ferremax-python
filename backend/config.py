@@ -447,3 +447,124 @@ def flask_crear_cliente(data: Dict[str, Any]) -> Tuple[Dict, int]:
         return {"error": f"Error: {str(e)}"}, 500
     
 "cualquier wea nueva se agrega aqui"
+
+#CRUD EMPLEADO
+
+def get_empleados() -> list:
+    query = """
+        SELECT e.id_empleado, e.pnom_emp, e.snom_emp, e.appat_emp, e.apmat_emp, e.correo_emp, e.id_cargo, c.nom_cargo
+        FROM Empleado e
+        LEFT JOIN Cargo c ON e.id_cargo = c.id_cargo
+    """
+    return execute_query(query, database_type='empleado')
+
+def get_empleado_by_id(id_empleado: str) -> dict:
+    query = """
+        SELECT e.id_empleado, e.pnom_emp, e.snom_emp, e.appat_emp, e.apmat_emp, e.correo_emp, e.id_cargo, c.nom_cargo
+        FROM Empleado e
+        LEFT JOIN Cargo c ON e.id_cargo = c.id_cargo
+        WHERE e.id_empleado = %s
+    """
+    result = execute_query(query, (id_empleado,), database_type='empleado')
+    return result[0] if result else None
+
+def crear_empleado(data: dict) -> dict:
+    campos = ['pnom_emp', 'snom_emp', 'appat_emp', 'apmat_emp', 'correo_emp', 'id_cargo', 'password_emp']
+    for campo in campos:
+        if campo not in data:
+            raise ValueError(f"El campo '{campo}' es obligatorio")
+
+    # Obtener el último id_empleado
+    query_last_id = "SELECT id_empleado FROM Empleado WHERE id_empleado <> '' ORDER BY id_empleado DESC LIMIT 1"
+    result = execute_query(query_last_id, database_type='empleado')
+    if result and result[0]['id_empleado']:
+        last_id = result[0]['id_empleado']
+        last_num = int(last_id.replace('EMP', ''))
+        new_num = last_num + 1
+    else:
+        new_num = 1
+    new_id = f"EMP{new_num:03d}"
+
+    query = """
+        INSERT INTO Empleado (id_empleado, pnom_emp, snom_emp, appat_emp, apmat_emp, correo_emp, id_cargo, password_emp)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    params = (
+        new_id,
+        data['pnom_emp'],
+        data['snom_emp'],
+        data['appat_emp'],
+        data['apmat_emp'],
+        data['correo_emp'],
+        data['id_cargo'],
+        data['password_emp']
+    )
+    execute_query(query, params, fetch=False, database_type='empleado')
+    return get_empleado_by_id(new_id)
+
+def modificar_empleado(id_empleado: str, data: dict) -> dict:
+    campos_validos = ['pnom_emp', 'snom_emp', 'appat_emp', 'apmat_emp', 'correo_emp', 'id_cargo', 'password_emp']
+    set_clause = ', '.join([f"{campo} = %s" for campo in data if campo in campos_validos])
+    if not set_clause:
+        raise ValueError("No hay campos válidos para actualizar")
+    params = tuple(data[campo] for campo in data if campo in campos_validos) + (id_empleado,)
+    query = f"UPDATE Empleado SET {set_clause} WHERE id_empleado = %s"
+    execute_query(query, params, fetch=False, database_type='empleado')
+    return get_empleado_by_id(id_empleado)
+
+def eliminar_empleado(id_empleado: str) -> dict:
+    empleado = get_empleado_by_id(id_empleado)
+    if not empleado:
+        raise ValueError("El empleado no existe")
+    query = "DELETE FROM Empleado WHERE id_empleado = %s"
+    try:
+        execute_query(query, (id_empleado,), fetch=False, database_type='empleado')
+    except DatabaseError as e:
+        raise ValueError(f"No se puede eliminar el empleado: {e}")
+    return {"message": "Empleado eliminado correctamente"}
+
+# Funciones para usar en Flask
+
+def flask_get_empleados():
+    try:
+        empleados = get_empleados()
+        return {"data": empleados, "count": len(empleados)}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+def flask_get_empleado(id_empleado: str):
+    try:
+        empleado = get_empleado_by_id(id_empleado)
+        if empleado:
+            return {"data": empleado}, 200
+        else:
+            return {"error": "Empleado no encontrado"}, 404
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+def flask_crear_empleado(data: dict):
+    try:
+        nuevo = crear_empleado(data)
+        return {"message": "Empleado creado", "data": nuevo}, 201
+    except ValueError as e:
+        return {"error": str(e)}, 400
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+def flask_modificar_empleado(id_empleado: str, data: dict):
+    try:
+        actualizado = modificar_empleado(id_empleado, data)
+        return {"message": "Empleado actualizado", "data": actualizado}, 200
+    except ValueError as e:
+        return {"error": str(e)}, 400
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+def flask_eliminar_empleado(id_empleado: str):
+    try:
+        resultado = eliminar_empleado(id_empleado)
+        return resultado, 200
+    except ValueError as e:
+        return {"error": str(e)}, 400
+    except Exception as e:
+        return {"error": str(e)}, 500

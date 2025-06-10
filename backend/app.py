@@ -24,7 +24,12 @@ from config import (
     flask_eliminar_producto,
     flask_login,
     flask_crear_cliente,
-    get_db_connection
+    get_db_connection,
+    flask_get_empleados,
+    flask_get_empleado,
+    flask_crear_empleado,
+    flask_modificar_empleado,
+    flask_eliminar_empleado
 )
 
 # Inicialización de la aplicación Flask
@@ -624,6 +629,29 @@ def anular_transaccion():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+#API EMPLEADOS
+@app.route('/api/empleados', methods=['GET'])
+def get_empleados():
+    return flask_get_empleados()
+
+@app.route('/api/empleados/<id_empleado>', methods=['GET'])
+def get_empleado(id_empleado):
+    return flask_get_empleado(id_empleado)
+
+@app.route('/api/empleados', methods=['POST'])
+def crear_empleado():
+    data = request.get_json()
+    return flask_crear_empleado(data)
+
+@app.route('/api/empleados/<id_empleado>', methods=['PUT'])
+def modificar_empleado(id_empleado):
+    data = request.get_json()
+    return flask_modificar_empleado(id_empleado, data)
+
+@app.route('/api/empleados/<id_empleado>', methods=['DELETE'])
+def eliminar_empleado(id_empleado):
+    return flask_eliminar_empleado(id_empleado)
 
 # Punto de entrada de la aplicación
 if __name__ == '__main__':

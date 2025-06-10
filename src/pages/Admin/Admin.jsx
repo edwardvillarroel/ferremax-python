@@ -31,7 +31,7 @@ function AdminPage() {
               <Card.Text className="text-center">
                 Gestiona usuarios, roles y permisos del personal.
               </Card.Text>
-              <Button variant="secondary" className="mt-auto w-100">
+              <Button variant="secondary" className="mt-auto w-100" onClick={() => navigate('/admin/empleados')}>
                 Ir a Empleados
               </Button>
             </Card.Body>
