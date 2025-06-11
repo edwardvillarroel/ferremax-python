@@ -1,0 +1,7 @@
+flask
+flask_cors
+flasgger
+pymysql
+transbank-sdk
+mysql-connector
+dotenv
