@@ -13,7 +13,7 @@ from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import WebpayOptions
 import mysql.connector  # Otro conector para MySQL
 # Importaciones desde archivo de configuración local
-from config import flask_login, flask_login_empleado
+from config import flask_login, flask_login_empleado, flask_get_categorias
 
 from config import (
     DatabaseError,
@@ -652,6 +652,10 @@ def modificar_empleado(id_empleado):
 @app.route('/api/empleados/<id_empleado>', methods=['DELETE'])
 def eliminar_empleado(id_empleado):
     return flask_eliminar_empleado(id_empleado)
+
+@app.route('/api/categorias', methods=['GET'])
+def get_categorias():
+    return flask_get_categorias()
 
 # Punto de entrada de la aplicación
 if __name__ == '__main__':

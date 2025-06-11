@@ -149,7 +149,7 @@ function GestionEmpleados() {
                     value={busqueda}
                     onChange={(e) => setBusqueda(e.target.value)}
                 />
-                <Button variant="primary" onClick={() => handleShowModal()}>
+                <Button variant="primary" className="ms-2" onClick={() => handleShowModal()}>
                     Agregar Empleado
                 </Button>
             </InputGroup>

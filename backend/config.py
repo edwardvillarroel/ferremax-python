@@ -409,8 +409,18 @@ def flask_eliminar_producto(id_producto: str) -> Tuple[Dict, int]:
         return {"error": str(e)}, 500
     except Exception as e:
         return {"error": f"Error: {str(e)}"}, 500
-    
 
+def get_categorias() -> list:
+    query = "SELECT id_categoria, nom_cat FROM Categoria"
+    return execute_query(query, database_type='producto')
+
+def flask_get_categorias():
+    try:
+        categorias = get_categorias()
+        return {"data": categorias, "count": len(categorias)}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+    
 def flask_crear_cliente(data: Dict[str, Any]) -> Tuple[Dict, int]:
     try:        
         campos_obligatorios = ['run_cliente', 'dvrun_cliente', 'nombre_cliente', 

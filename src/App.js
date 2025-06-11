@@ -12,6 +12,7 @@ import TransbankPayment from './components/webPay/pagoTransbank';
 import PaymentResult from './components/webPay/resultadoPago';
 import ProductoPage from './pages/Productos/ProductoPage';
 import GestionEmpleados from './pages/Admin//AdminPages/GestionEmpleados.jsx';
+import GestionInventario from './pages/Admin//AdminPages/GestionInventario.jsx';
 
 
 function Inicio() {
@@ -54,6 +55,7 @@ function App() {
           <Route path="/webPay" element={<TransbankPayment />} />
           <Route path="/resultado" element={<PaymentResult />} />
           <Route path="/admin/empleados" element={<GestionEmpleados />} />
+          <Route path="/admin/inventario" element={<GestionInventario />} />
         </Routes>
       </main>
       <FooterFerremax />
