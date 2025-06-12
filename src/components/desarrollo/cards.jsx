@@ -57,41 +57,76 @@ export function MediaCard() {
     }
   };
 
-  return (
-    <Row>
-      {Array.isArray(productos) && productos.length > 0 ? (
-        productos.map((producto) => (
-          
-          <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} className="mb-4">
-            <Card className="cardPromocion">
-              <Card.Img variant="top" src={producto.img_prod ? `data:image/jpeg;base64,${producto.img_prod.trim()}` : '/imagenes/unaviable.jpg'}
-                  alt={producto.nom_prod}/>
-                  
-              <div className="card-divider"/>
-              <Card.Body className="card-body-custom">
-                <Card.Title className="card-title">{producto.nom_prod}</Card.Title>
-                <Card.Subtitle>{producto.marca}</Card.Subtitle>
-                <Card.Text>
-                  <span className="current-price">${producto.precio}</span>
-                  <p className="description">{producto.descr_prod}</p>
-                  <span className="stock">Stock: {producto.stock} unidades</span>
-                </Card.Text>
-                <div className="button-wrapper">
-                  <Button className="button-card" onClick={() => handleAddToCart(producto)}>
-                    Añadir al carrito
-                  </Button>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))
-      ) : (
-        <p>No hay productos disponibles</p>
-      )}
+  const extractRealBase64 = (encodedString) => {
+ try {
+   const decoded = atob(encodedString);
+   const match = decoded.match(/data:image\/([^;]+);base64,([^)]+)/);
+   
+   if (match) {
+     return {
+       type: match[1],
+       base64: match[2]
+     };
+   }
+ } catch (error) {
+   return null;
+ }
+ return null;
+};
 
-    </Row>
-    
-  );
+const renderProductImage = (producto) => {
+ if (!producto.img_prod) {
+   return '/imagenes/unaviable.jpg';
+ }
+ 
+ if (producto.img_prod.startsWith('data:image/')) {
+   return producto.img_prod;
+ }
+ 
+ const realImageData = extractRealBase64(producto.img_prod.trim());
+ 
+ if (!realImageData) {
+   return '/imagenes/unaviable.jpg';
+ }
+ 
+ return `data:image/${realImageData.type};base64,${realImageData.base64}`;
+};
+
+return (
+ <Row>
+   {Array.isArray(productos) && productos.length > 0 ? (
+     productos.map((producto) => (
+       <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} className="mb-4">
+         <Card className="cardPromocion">
+           <Card.Img 
+             variant="top" 
+             src={renderProductImage(producto)}
+             alt={producto.nom_prod}
+           />
+           
+           <div className="card-divider"/>
+           <Card.Body className="card-body-custom">
+             <Card.Title className="card-title">{producto.nom_prod}</Card.Title>
+             <Card.Subtitle>{producto.marca}</Card.Subtitle>
+             <Card.Text>
+               <span className="current-price">${producto.precio}</span>
+               <p className="description">{producto.descr_prod}</p>
+               <span className="stock">Stock: {producto.stock} unidades</span>
+             </Card.Text>
+             <div className="button-wrapper">
+               <Button className="button-card" onClick={() => handleAddToCart(producto)}>
+                 Añadir al carrito
+               </Button>
+             </div>
+           </Card.Body>
+         </Card>
+       </Col>
+     ))
+   ) : (
+     <p>No hay productos disponibles</p>
+   )}
+ </Row>
+);
 }
 
 export function MediaCardLanzamientos() {
