@@ -1,4 +1,4 @@
-import { Button, Card } from 'react-bootstrap';
+import { Button, Card, Col, Row } from 'react-bootstrap';
 import './desarrollo.css';
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
@@ -58,11 +58,11 @@ export function MediaCard() {
   };
 
   return (
-    <div className="products-container">
+    <Row>
       {Array.isArray(productos) && productos.length > 0 ? (
         productos.map((producto) => (
           
-          <div key={producto.id_producto} className="media-card-wrapper">
+          <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} className="mb-4">
             <Card className="cardPromocion">
               <Card.Img variant="top" src={producto.img_prod ? `data:image/jpeg;base64,${producto.img_prod.trim()}` : '/imagenes/unaviable.jpg'}
                   alt={producto.nom_prod}/>
@@ -83,13 +83,13 @@ export function MediaCard() {
                 </div>
               </Card.Body>
             </Card>
-          </div>
+          </Col>
         ))
       ) : (
         <p>No hay productos disponibles</p>
       )}
 
-    </div>
+    </Row>
     
   );
 }
