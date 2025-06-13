@@ -450,15 +450,23 @@ def crear_transaccion():
         
         # URL de retorno personalizable o por defecto
         return_url = data.get('return_url', 'http://localhost:3001/resultadoPago')
-        
+        options = WebpayOptions(COMMERCE_CODE, API_KEY, INTEGRATION_TYPE)
+        tx = Transaction(options)
         # Crear transacción en Transbank
-        response = Transaction.create(
+        response = tx.create(
             buy_order=buy_order,
             session_id=session_id,
             amount=amount,
             return_url=return_url
         )
-        
+        # Extraer token y URL de la respuesta (manejo de dict y objeto)
+        if isinstance(response, dict):
+            token = response.get('token')
+            url = response.get('url')
+        else:
+            token = getattr(response, 'token', None)
+            url = getattr(response, 'url', None)
+            
         # Almacenar información de la transacción en memoria
         transactions[buy_order] = {
             'buy_order': buy_order,
@@ -466,14 +474,14 @@ def crear_transaccion():
             'amount': amount,
             'status': 'CREATED',  # Estado inicial
             'created_at': datetime.datetime.now().isoformat(),  # Timestamp de creación
-            'token': response.token  # Token de Transbank
+            'token': token # Token de Transbank
         }
         
         # Retornar información de la transacción creada
         return jsonify({
             'success': True,
-            'token': response.token,      # Token para el formulario de pago
-            'url': response.url,          # URL del formulario de Transbank
+            'token': token,      # Token para el formulario de pago
+            'url': url,          # URL del formulario de Transbank
             'buy_order': buy_order,       # Orden de compra generada
             'amount': amount              # Monto de la transacción
         })

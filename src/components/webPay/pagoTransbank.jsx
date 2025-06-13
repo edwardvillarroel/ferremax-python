@@ -27,7 +27,7 @@ const TransbankPayment = ({
 
     setLoading(true);
     try {
-      const response = await fetch(`${apiBaseUrl}/crear_transaccion`, {
+      const response = await fetch(`${apiBaseUrl}/webpay/crear_transaccion`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
