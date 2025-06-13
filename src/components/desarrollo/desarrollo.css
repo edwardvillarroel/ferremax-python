@@ -123,8 +123,8 @@
 }
 
 .cardPromocion {
-  width: 100%;
-  max-width: 300px;
+  width: 300px;
+  max-width: 100%;
 }
 
 .imagen-no-disponible {
@@ -137,4 +137,12 @@
   font-size: 1rem;
   text-align: center;
   border-radius: 4px 4px 0 0;
+}
+
+.cards-wrapper {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
 }

@@ -3,7 +3,7 @@ import HeaderFerremax from './components/header/header';
 import ImgBanner from './components/carousel/imagenesCarousel';
 import FooterFerremax from './components/footer/footer';
 import NavbarF from './components/navbar/NavbarF';
-import { MediaCard, MediaCardLanzamientos } from './components/desarrollo/cards';
+import { MediaCardPromocion, MediaCardLanzamientos } from './components/desarrollo/cards';
 import InicioPage from './pages/InicioSesion/InicioPage';
 import RegistroUser from './pages/Registro/Registro';
 import CarritoPage from './pages/Carrito/Carrito';
@@ -23,7 +23,7 @@ function Inicio() {
         Productos en Promoción
       </h1>
       <div className="cards-wrapper">
-        <MediaCard />
+        <MediaCardPromocion />
       </div>
       <h1 style={{ textAlign: 'center', margin: '2rem 0', color: 'black' }}>
         Lanzamientos Recientes

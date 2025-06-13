@@ -137,6 +137,32 @@ def get_producto(id_producto):
     # Delega la lógica a una función importada, pasando el ID del producto
     return flask_get_producto(id_producto)
 
+# ...existing code...
+
+@app.route('/')
+def home():
+    try:
+        conn = get_db_connection(database_type='cliente')  
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        # Lanzamientos nuevos (máximo 3)
+        cursor.execute("SELECT * FROM productos WHERE lanzamiento = 1 ")
+        lanzamientos = cursor.fetchall()
+
+        # En promoción (máximo 3)
+        cursor.execute("SELECT * FROM productos WHERE promocion = 1 ")
+        promociones = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        lanzamientos = []
+        promociones = []
+        print(f"Error al obtener productos destacados: {e}")
+
+    return render_template('home.html', lanzamientos=lanzamientos, promociones=promociones)
+
+
 @app.route('/api/productos', methods=['POST'])  # Endpoint para crear un nuevo producto
 @swag_from({
     'tags': ['Productos'],
