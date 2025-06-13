@@ -145,11 +145,11 @@ def home():
         conn = get_db_connection(database_type='cliente')  
         cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-        # Lanzamientos nuevos (máximo 3)
+        # Lanzamientos nuevos 
         cursor.execute("SELECT * FROM productos WHERE lanzamiento = 1 ")
         lanzamientos = cursor.fetchall()
 
-        # En promoción (máximo 3)
+        # En promoción 
         cursor.execute("SELECT * FROM productos WHERE promocion = 1 ")
         promociones = cursor.fetchall()
 
