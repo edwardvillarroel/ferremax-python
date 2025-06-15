@@ -103,7 +103,7 @@ export function MediaCardLanzamientos() {
         const productosData = Array.isArray(response.data.data) ? response.data.data : [];
         const lanzamientos = productosData
           .filter(prod => prod.lanzamiento === 1)
-          .slice(0, 3);
+          .slice(0, 4);
         setProductos(lanzamientos);
       } catch (error) {
         Swal.fire({
@@ -131,7 +131,7 @@ export function MediaCardPromocion() {
         const productosData = Array.isArray(response.data.data) ? response.data.data : [];
         const promociones = productosData
           .filter(prod => prod.promocion === 1)
-          .slice(0, 3);
+          .slice(0, 4);
         setProductos(promociones);
       } catch (error) {
         Swal.fire({

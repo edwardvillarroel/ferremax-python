@@ -95,35 +95,49 @@ def crear_producto(
     marca: str,
     stock: int,
     id_categoria: int,
-    img_prod: Optional[bytes] = None) -> Dict[str, Any]:
+    lanzamiento: int,
+    promocion: int,
+    img_prod: Optional[str] = None) -> Dict[str, Any]:
+    
     # Validaciones
     if not isinstance(id_producto, str) or len(id_producto) > 12:
-        raise ValueError("El id_producto debe ser de  hasta 12 caracteres")
+        raise ValueError("El id_producto debe ser de hasta 12 caracteres")
     if not isinstance(nom_prod, str) or len(nom_prod) > 30:
         raise ValueError("El nom_prod debe de hasta 30 caracteres")
     if not isinstance(descr_prod, str) or len(descr_prod) > 50:
-        raise ValueError("La descr_prod debe serde hasta 50 caracteres")
+        raise ValueError("La descr_prod debe ser de hasta 50 caracteres")
     if not isinstance(precio, int) or precio < 0:
         raise ValueError("El precio debe ser un entero no negativo")
     if not isinstance(marca, str) or len(marca) > 30:
-        raise ValueError("La marca debe ser de hasta caracteres")
+        raise ValueError("La marca debe ser de hasta 30 caracteres")
     if not isinstance(stock, int) or stock < 0:
         raise ValueError("El stock debe ser un entero no negativo")
-    if not isinstance(id_categoria, int) or id_categoria <= 0:
-        raise ValueError("El id_categoria debe ser un entero positivo")
+    if not isinstance(id_categoria, int) or id_categoria < 1 or id_categoria > 7:
+        raise ValueError("El id_categoria debe ser un entero entre 1 y 7")
+    if not isinstance(lanzamiento, int) or lanzamiento not in [0, 1]:
+        raise ValueError("El lanzamiento debe ser 0 o 1")
+    if not isinstance(promocion, int) or promocion not in [0, 1]:
+        raise ValueError("La promocion debe ser 0 o 1")
+    
+    # Validación de imagen corregida
     if img_prod is not None:
-            if not isinstance(img_prod, str):
-                raise ValueError("La imagen debe ser un string en formato Base64 o None")
+        if not isinstance(img_prod, str):
+            raise ValueError("La imagen debe ser un string en formato Base64 o None")
+        if img_prod.strip():  # Solo validar si no está vacío
             try:
                 base64.b64decode(img_prod, validate=True)
             except Exception as e:
                 raise ValueError(f"Formato Base64 inválido: {str(e)}")
 
-    query = """INSERT INTO Producto (id_producto, nom_prod, descr_prod, precio, marca, stock, id_categoria, img_prod)VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
-    params = (id_producto, nom_prod, descr_prod, precio, marca, stock, id_categoria, img_prod)
-    execute_query(query, params, fetch=False, database_type='producto')
-
-    return get_producto(id_producto)
+    query = """INSERT INTO Producto (id_producto, nom_prod, descr_prod, precio, marca, stock, id_categoria, lanzamiento, promocion, img_prod) 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+    params = (id_producto, nom_prod, descr_prod, precio, marca, stock, id_categoria, lanzamiento, promocion, img_prod)
+    
+    try:
+        execute_query(query, params, fetch=False, database_type='producto')
+        return get_producto(id_producto)
+    except Exception as e:
+        raise DatabaseError(f"Error al crear producto: {str(e)}")
 
 
 def modificar_producto(id_producto: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -131,66 +145,94 @@ def modificar_producto(id_producto: str, data: Dict[str, Any]) -> Dict[str, Any]
         raise ValueError("Ingresa datos para modificar")
     
     formatosValidos = {
-            'nom_prod': {'type': str, 'max_length': 30, 'error': "El nom_prod debe ser de hasta 30 caracteres"},
-            'descr_prod': {'type': str, 'max_length': 50, 'error': "La descr_prod debe ser de hasta 50 caracteres"},
-            'precio': {'type': int, 'min_value': 0, 'error': "El precio debe ser un entero no negativo"},
-            'marca': {'type': str, 'max_length': 30, 'error': "La marca debe ser de hasta 30 caracteres"},
-            'stock': {'type': int, 'min_value': 0, 'error': "El stock debe ser un entero no positivo"},
-            'id_categoria': {'type': int, 'min_value': 1, 'error': "El id_categoria debe ser un entero positivo"},
-            'img_prod': {'type': str, 'optional': True, 'error': "La imagen debe ser un string en formato Base64 o None"}
-        }
-    #ESTA WEA VALIDA EL ID , Y LO DE ABAJO VALIDA EL FORMATO DE LOS CAMPOS Y DATOS PA MODIFICAR, NO BORREN ESTE COMENTARIO CTM QUE DESPUES SE ME OLVIDA PA QUE SON Y BORRO TODO
+        'nom_prod': {'type': str, 'max_length': 30, 'error': "El nom_prod debe ser de hasta 30 caracteres"},
+        'descr_prod': {'type': str, 'max_length': 50, 'error': "La descr_prod debe ser de hasta 50 caracteres"},
+        'precio': {'type': int, 'min_value': 0, 'error': "El precio debe ser un entero no negativo"},
+        'marca': {'type': str, 'max_length': 30, 'error': "La marca debe ser de hasta 30 caracteres"},
+        'stock': {'type': int, 'min_value': 0, 'error': "El stock debe ser un entero no negativo"},  # Corregido
+        'id_categoria': {'type': int, 'min_value': 1, 'max_value': 7, 'error': "El id_categoria debe ser un entero entre 1 y 7"},
+        'lanzamiento': {'type': int, 'valid_values': [0, 1], 'error': "El lanzamiento debe ser 0 o 1"},
+        'promocion': {'type': int, 'valid_values': [0, 1], 'error': "La promocion debe ser 0 o 1"},
+        'img_prod': {'type': str, 'optional': True, 'error': "La imagen debe ser un string en formato Base64 o None"}
+    }
+    
+    # Validación del ID
     if not isinstance(id_producto, str) or len(id_producto) > 12:
         raise ValueError("El ID del producto debe ser un string de hasta 12 caracteres")
 
+    # Verificar que el producto existe
+    if not get_producto(id_producto):
+        raise ValueError("El producto con ese ID no existe")
+
+    # Validación de campos
     for key in data:
         if key not in formatosValidos:
             raise ValueError(f"Campo inválido: {key}")
+        
         field_info = formatosValidos[key]
         value = data[key]
 
         if value is not None:
+            # Validación de tipo
             if not isinstance(value, field_info['type']):
                 raise ValueError(field_info['error'])
-            if field_info.get('max_length') and len(value) > field_info['max_length']:
+            
+            # Validación de longitud máxima
+            if field_info.get('max_length') and len(str(value)) > field_info['max_length']:
                 raise ValueError(field_info['error'])
+            
+            # Validación de valor mínimo
             if field_info.get('min_value') is not None and value < field_info['min_value']:
                 raise ValueError(field_info['error'])
-            if key == 'img_prod':
+            
+            # Validación de valor máximo
+            if field_info.get('max_value') is not None and value > field_info['max_value']:
+                raise ValueError(field_info['error'])
+            
+            # Validación de valores válidos (para lanzamiento y promocion)
+            if field_info.get('valid_values') and value not in field_info['valid_values']:
+                raise ValueError(field_info['error'])
+            
+            # Validación especial para imagen
+            if key == 'img_prod' and value.strip():
                 try:
                     base64.b64decode(value, validate=True)
                 except Exception as e:
                     raise ValueError(f"Formato Base64 inválido para img_prod: {str(e)}")
 
-
-    processed_data = data.copy()
-    if 'img_prod' in processed_data and processed_data['img_prod'] is not None:
-        processed_data['img_prod'] = base64.b64decode(processed_data['img_prod'])
-
-    set_clause = ', '.join([f"{key} = %s" for key in processed_data.keys()])
-    values = tuple(list(processed_data.values()) + [id_producto])
+    # Construir query sin modificar los datos (mantener como string Base64)
+    set_clause = ', '.join([f"{key} = %s" for key in data.keys()])
+    values = tuple(list(data.values()) + [id_producto])
     query = f"UPDATE Producto SET {set_clause} WHERE id_producto = %s"
-    execute_query(query, values, fetch=False, database_type='producto')
-    return get_producto(id_producto)
+    
+    try:
+        execute_query(query, values, fetch=False, database_type='producto')
+        return get_producto(id_producto)
+    except Exception as e:
+        raise DatabaseError(f"Error al modificar producto: {str(e)}")
 
 
 def eliminar_producto(id_producto: str) -> Dict[str, Any]:
     if not isinstance(id_producto, str) or len(id_producto) > 12:
         raise ValueError("El id_producto debe ser de hasta 12 caracteres")
 
+    # Verificar que el producto existe antes de eliminar
     producto = get_producto(id_producto)
     if not producto:
-        raise ValueError("El ID no existe")
+        raise ValueError("El producto con ese ID no existe")
     
     query = "DELETE FROM Producto WHERE id_producto = %s"
     params = (id_producto,)
     
-    rows_affected = execute_query(query, params, fetch=False, database_type='producto')
-    
-    if rows_affected == 0:
-        raise DatabaseError("No se pudo eliminar el producto")
-    
-    return {"message": f"Producto eliminado correctamente"}
+    try:
+        rows_affected = execute_query(query, params, fetch=False, database_type='producto')
+        
+        if rows_affected == 0:
+            raise DatabaseError("No se pudo eliminar el producto")
+        
+        return {"message": f"Producto {id_producto} eliminado correctamente"}
+    except Exception as e:
+        raise DatabaseError(f"Error al eliminar producto: {str(e)}")
 
 
 
@@ -333,6 +375,7 @@ def flask_get_producto(id_producto: str) -> Tuple[Dict, int]:
         return {"error": f"Error: {str(e)}"}, 500
     
     
+
 def flask_crear_producto(data: Dict[str, Any]) -> Tuple[Dict, int]:
     try:        
         id_producto = data.get('id_producto')
@@ -342,11 +385,33 @@ def flask_crear_producto(data: Dict[str, Any]) -> Tuple[Dict, int]:
         producto_existente = get_producto(id_producto)
         if producto_existente:
             return {"error": f"Ya existe un producto con ID {id_producto}"}, 409
-                
-        campos_obligatorios = ['id_producto', 'nom_prod', 'descr_prod', 'precio', 'marca', 'stock', 'id_categoria']
+        
+        # Campos obligatorios actualizados con lanzamiento y promocion        
+        campos_obligatorios = ['id_producto', 'nom_prod', 'descr_prod', 'precio', 'marca', 'stock', 'id_categoria', 'lanzamiento', 'promocion']
         for campo in campos_obligatorios:
             if campo not in data:
                 return {"error": f"El campo '{campo}' es obligatorio"}, 400
+        
+        # Validaciones adicionales de tipo y rango
+        try:
+            # Convertir a enteros si vienen como string
+            data['precio'] = int(data['precio'])
+            data['stock'] = int(data['stock'])
+            data['id_categoria'] = int(data['id_categoria'])
+            data['lanzamiento'] = int(data['lanzamiento'])
+            data['promocion'] = int(data['promocion'])
+        except (ValueError, TypeError):
+            return {"error": "Los campos numéricos deben ser números enteros válidos"}, 400
+        
+        # Validaciones específicas
+        if data['id_categoria'] < 1 or data['id_categoria'] > 7:
+            return {"error": "El id_categoria debe estar entre 1 y 7"}, 400
+        
+        if data['lanzamiento'] not in [0, 1]:
+            return {"error": "El campo lanzamiento debe ser 0 o 1"}, 400
+            
+        if data['promocion'] not in [0, 1]:
+            return {"error": "El campo promocion debe ser 0 o 1"}, 400
                 
         nuevo_producto = crear_producto(
             id_producto=data['id_producto'],
@@ -356,10 +421,12 @@ def flask_crear_producto(data: Dict[str, Any]) -> Tuple[Dict, int]:
             marca=data['marca'],
             stock=data['stock'],
             id_categoria=data['id_categoria'],
+            lanzamiento=data['lanzamiento'],
+            promocion=data['promocion'],
             img_prod=data.get('img_prod')
         )        
         return {
-            "message": "Producto agregado",
+            "message": "Producto agregado exitosamente",
             "data": nuevo_producto
         }, 201
     except ValueError as e:
@@ -367,22 +434,59 @@ def flask_crear_producto(data: Dict[str, Any]) -> Tuple[Dict, int]:
     except DatabaseError as e:
         return {"error": str(e)}, 500
     except Exception as e:
-        return {"error": f"Error: {str(e)}"}, 500
+        return {"error": f"Error interno: {str(e)}"}, 500
 
 
 def flask_modificar_producto(id_producto: str, data: Dict[str, Any]) -> Tuple[Dict, int]:
     try:        
         producto = get_producto(id_producto)
         if not producto:
-            return {"error": f"EL ID {id_producto} no existe"}, 404
+            return {"error": f"El producto con ID {id_producto} no existe"}, 404
                 
         if not data:
             return {"error": "No se proporcionaron datos para actualizar"}, 400
-                
+        
+        # Validaciones adicionales para campos que pueden ser modificados
+        if 'precio' in data:
+            try:
+                data['precio'] = int(data['precio'])
+            except (ValueError, TypeError):
+                return {"error": "El precio debe ser un número entero válido"}, 400
+        
+        if 'stock' in data:
+            try:
+                data['stock'] = int(data['stock'])
+            except (ValueError, TypeError):
+                return {"error": "El stock debe ser un número entero válido"}, 400
+        
+        if 'id_categoria' in data:
+            try:
+                data['id_categoria'] = int(data['id_categoria'])
+                if data['id_categoria'] < 1 or data['id_categoria'] > 7:
+                    return {"error": "El id_categoria debe estar entre 1 y 7"}, 400
+            except (ValueError, TypeError):
+                return {"error": "El id_categoria debe ser un número entero válido"}, 400
+        
+        if 'lanzamiento' in data:
+            try:
+                data['lanzamiento'] = int(data['lanzamiento'])
+                if data['lanzamiento'] not in [0, 1]:
+                    return {"error": "El campo lanzamiento debe ser 0 o 1"}, 400
+            except (ValueError, TypeError):
+                return {"error": "El lanzamiento debe ser un número entero válido (0 o 1)"}, 400
+        
+        if 'promocion' in data:
+            try:
+                data['promocion'] = int(data['promocion'])
+                if data['promocion'] not in [0, 1]:
+                    return {"error": "El campo promocion debe ser 0 o 1"}, 400
+            except (ValueError, TypeError):
+                return {"error": "La promocion debe ser un número entero válido (0 o 1)"}, 400
+        
         producto_actualizado = modificar_producto(id_producto, data)
         
         return {
-            "message": "Producto actualizado",
+            "message": "Producto actualizado exitosamente",
             "data": producto_actualizado
         }, 200
     except ValueError as e:
@@ -390,25 +494,61 @@ def flask_modificar_producto(id_producto: str, data: Dict[str, Any]) -> Tuple[Di
     except DatabaseError as e:
         return {"error": str(e)}, 500
     except Exception as e:
-        return {"error": f"Error: {str(e)}"}, 500
+        return {"error": f"Error interno: {str(e)}"}, 500
 
 
 def flask_eliminar_producto(id_producto: str) -> Tuple[Dict, int]:
     try:
+        # Validar que el ID no esté vacío
+        if not id_producto or not id_producto.strip():
+            return {"error": "El ID del producto es requerido"}, 400
+        
         producto = get_producto(id_producto)
         if not producto:
-            return {"error": f"El ID {id_producto} no existe"}, 404
+            return {"error": f"El producto con ID {id_producto} no existe"}, 404
                 
         resultado = eliminar_producto(id_producto)        
         return {
-            "message": resultado.get("message", "Producto eliminado")
+            "message": resultado.get("message", "Producto eliminado exitosamente")
         }, 200
     except ValueError as e:
         return {"error": str(e)}, 400
     except DatabaseError as e:
         return {"error": str(e)}, 500
     except Exception as e:
-        return {"error": f"Error: {str(e)}"}, 500
+        return {"error": f"Error interno: {str(e)}"}, 500
+
+
+# Función auxiliar para validar datos de entrada comunes
+def validar_datos_producto(data: Dict[str, Any], es_creacion: bool = False) -> Tuple[Dict, int, bool]:
+    """
+    Valida los datos de entrada para crear/modificar productos
+    Retorna: (mensaje_error, codigo_estado, es_valido)
+    """
+    if es_creacion:
+        campos_obligatorios = ['id_producto', 'nom_prod', 'descr_prod', 'precio', 'marca', 'stock', 'id_categoria', 'lanzamiento', 'promocion']
+        for campo in campos_obligatorios:
+            if campo not in data or data[campo] is None:
+                return {"error": f"El campo '{campo}' es obligatorio"}, 400, False
+    
+    # Validaciones de longitud para strings
+    validaciones_string = {
+        'id_producto': 12,
+        'nom_prod': 30,
+        'descr_prod': 50,
+        'marca': 30
+    }
+    
+    for campo, max_length in validaciones_string.items():
+        if campo in data and data[campo] is not None:
+            if not isinstance(data[campo], str):
+                return {"error": f"El campo '{campo}' debe ser texto"}, 400, False
+            if len(data[campo]) > max_length:
+                return {"error": f"El campo '{campo}' no puede tener más de {max_length} caracteres"}, 400, False
+            if len(data[campo].strip()) == 0:
+                return {"error": f"El campo '{campo}' no puede estar vacío"}, 400, False
+    
+    return {}, 200, True
 
 def get_categorias() -> list:
     query = "SELECT id_categoria, nom_cat FROM Categoria"
