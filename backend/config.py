@@ -74,18 +74,34 @@ def get_productos() -> List[Dict[str, Any]]:
     productos = execute_query(query, database_type='producto')
     
     for producto in productos:
-        if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
-            producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+        if producto.get('img_prod'):
+            if isinstance(producto['img_prod'], bytes):
+                # Versión para Flask templates (base64 puro)
+                producto['img_prod_base64'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+                # Versión para React (con prefijo)
+                producto['img_prod'] = f"data:image/jpeg;base64,{producto['img_prod_base64']}"
+            elif producto['img_prod'] == '0.00':
+                producto['img_prod'] = None
+                producto['img_prod_base64'] = None
+            elif not producto['img_prod'].startswith('data:image'):
+                # Si es base64 pero sin prefijo
+                producto['img_prod'] = f"data:image/jpeg;base64,{producto['img_prod']}"
     
     return productos
 
-
 def get_producto(id_producto: str) -> Optional[Dict[str, Any]]:
     if not isinstance(id_producto, str) or len(id_producto) > 12:
-        raise ValueError("El id_producto debe ser de  hasta 12 caracteres")
+        raise ValueError("El id_producto debe ser de hasta 12 caracteres")
+    
     query = "SELECT * FROM Producto WHERE id_producto = %s"
     result = execute_query(query, (id_producto,), database_type='producto')
-    return result[0] if result else None
+    
+    if result:
+        producto = result[0]
+        if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
+            producto['img_prod'] = f"data:image/jpeg;base64,{base64.b64encode(producto['img_prod']).decode('utf-8')}"
+        return producto
+    return None
 
 def crear_producto(
     id_producto: str,

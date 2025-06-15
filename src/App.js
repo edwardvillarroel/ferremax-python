@@ -10,7 +10,7 @@ import CarritoPage from './pages/Carrito/Carrito';
 import AdminPage from './pages/Admin/Admin';
 import TransbankPayment from './components/webPay/pagoTransbank';
 import PaymentResult from './components/webPay/resultadoPago';
-import ProductoPage from './pages/Productos/ProductoPage';
+import HerramientasPage from './pages/Productos/HerramientasPage.jsx';
 import GestionEmpleados from './pages/Admin//AdminPages/GestionEmpleados.jsx';
 import GestionInventario from './pages/Admin//AdminPages/GestionInventario.jsx';
 
@@ -51,7 +51,7 @@ function App() {
           <Route path="/registro" element={<RegistroUser />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/TuCarrito" element={<CarritoPage />} />
-          <Route path="/Producto" element={<ProductoPage />} />
+          <Route path="/Herramientas" element={<HerramientasPage />} />
           <Route path="/webPay" element={<TransbankPayment />} />
           <Route path="/resultado" element={<PaymentResult />} />
           <Route path="/admin/empleados" element={<GestionEmpleados />} />

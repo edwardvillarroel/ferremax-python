@@ -113,7 +113,7 @@ def execute_query(query, params=None, fetch=False, db_type='producto'):
         
         if fetch or query.strip().upper().startswith('SELECT'):
             result = cursor.fetchall()
-            return result if result else []  # Siempre retorna lista
+            return result if result else []  
         else:
             connection.commit()
             return cursor.rowcount
@@ -130,15 +130,49 @@ def execute_query(query, params=None, fetch=False, db_type='producto'):
 
 # ENDPOINTS DE PRODUCTOS
 
+@app.route('/api/productos/categoria/<int:categoria_min>/<int:categoria_max>', methods=['GET'])
+def get_productos_por_categoria(categoria_min, categoria_max):
+    try:
+        query = '''
+            SELECT * FROM Producto 
+            WHERE id_categoria BETWEEN %s AND %s
+        '''
+        productos = execute_query(query, (categoria_min, categoria_max), fetch=True)
+        
+        for producto in productos:
+            if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
+                producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+        
+        return jsonify({
+            'success': True,
+            'data': productos
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/productos', methods=['GET'])
 def get_productos():
     try:
         productos = execute_query('SELECT * FROM Producto', fetch=True)
         
-        # Convertir imágenes a base64 si existen
         for producto in productos:
-            if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
-                producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+            # Manejo de imágenes compatible con ambos componentes
+            if producto.get('img_prod'):
+                if isinstance(producto['img_prod'], bytes):
+                    # Versión para Herramientas (con prefijo)
+                    producto['img_prod_completa'] = 'data:image/jpeg;base64,' + base64.b64encode(producto['img_prod']).decode('utf-8')
+                    # Versión para Home (solo base64)
+                    producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+                elif producto['img_prod'] == '0.00':
+                    producto['img_prod'] = None
+                    producto['img_prod_completa'] = None
+            else:
+                producto['img_prod'] = None
+                producto['img_prod_completa'] = None
         
         return jsonify({
             'success': True,
@@ -186,22 +220,38 @@ def get_producto(id_producto):
 @app.route('/')
 def home():
     try:
-        # Obtener productos de lanzamiento
         lanzamientos = execute_query("SELECT * FROM Producto WHERE lanzamiento = 1", fetch=True)
-        
-        # Obtener productos en promoción
         promociones = execute_query("SELECT * FROM Producto WHERE promocion = 1", fetch=True)
         
-        # Convertir imágenes si existen
+        # Para el Home (Flask template) - mantener base64 puro
         for producto in lanzamientos + promociones:
             if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
                 producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
         
         return render_template('home.html', lanzamientos=lanzamientos, promociones=promociones)
-        
     except Exception as e:
-        print(f"Error al obtener productos destacados: {e}")
+        print(f"Error en home: {e}")
         return render_template('home.html', lanzamientos=[], promociones=[])
+
+@app.route('/api/productos')
+def api_productos():
+    try:
+        productos = execute_query("SELECT * FROM Producto", fetch=True)
+        
+        for producto in productos:
+            if producto.get('img_prod'):
+                if isinstance(producto['img_prod'], bytes):
+                    producto['img_prod'] = 'data:image/jpeg;base64,' + base64.b64encode(producto['img_prod']).decode('utf-8')
+                elif producto['img_prod'] != '0.00' and not producto['img_prod'].startswith('data:image'):
+                    producto['img_prod'] = 'data:image/jpeg;base64,' + producto['img_prod']
+        
+        return jsonify({
+            'success': True,
+            'data': productos
+        })
+    except Exception as e:
+        print(f"Error en api/productos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/productos', methods=['POST'])
 def crear_producto():
@@ -281,7 +331,7 @@ def actualizar_producto(id_producto):
     try:
         data = request.get_json()
         
-        # 1. Obtener el producto actual primero
+        # Obtener el producto actual primero
         producto_actual = execute_query(
             "SELECT img_prod FROM Producto WHERE id_producto = %s",
             (id_producto,),
@@ -304,7 +354,7 @@ def actualizar_producto(id_producto):
             else:
                 img_prod = data['img_prod']
 
-        # 3. Actualizar manteniendo la imagen original si no hay nueva
+        # Actualizar manteniendo la imagen original si no hay nueva
         execute_query('''
             UPDATE Producto SET
             nom_prod=%s, descr_prod=%s, precio=%s, marca=%s,

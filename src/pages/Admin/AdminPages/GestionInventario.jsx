@@ -276,24 +276,6 @@ function GestionInventario() {
         <div>
             <h2>Gestión de Inventario</h2>
             
-            {/* Botón para probar conexión */}
-            <div className="mb-3">
-                <Button 
-                    variant="info" 
-                    size="sm" 
-                    onClick={async () => {
-                        try {
-                            const response = await fetch(`${API_BASE_URL}/api/productos`);
-                            alert(`Conexión ${response.ok ? 'exitosa' : 'fallida'}: ${response.status}`);
-                        } catch (error) {
-                            alert(`Error de conexión: ${error.message}`);
-                        }
-                    }}
-                >
-                    Probar Conexión
-                </Button>
-                <small className="text-muted ms-2">API: {API_BASE_URL}</small>
-            </div>
             <InputGroup className="mb-3">
                 <Form.Control
                     placeholder="Buscar por nombre, descripción, marca, categoría, etc."

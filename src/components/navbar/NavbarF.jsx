@@ -155,7 +155,7 @@ function NavbarF() {
 
           <Navbar.Collapse id="responsive-navbar-nav">
             <Nav className="mx-auto text-center d-flex flex-wrap justify-content-center align-items-center nav-links-container">
-              <NavDropdown title="Herramientas" id="collapsible-nav-dropdown">
+              <NavDropdown title="Herramientas" id="collapsible-nav-dropdown"onClick={() => navigate('/herramientas')}>
                 <NavDropdown.Item as={Link} to="/Herramientas-Manuales" id="tools1">Herramientas Manuales</NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/Materiales-Basicos" id="tools2">Materiales Básicos</NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/Equipo-de-seguridad" id="tools3">Equipos de Seguridad</NavDropdown.Item>
