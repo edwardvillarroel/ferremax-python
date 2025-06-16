@@ -7,13 +7,16 @@ from flask_cors import CORS  # Para habilitar CORS (Cross-Origin Resource Sharin
 from flasgger import Swagger, swag_from  # Para documentación automática de API
 import logging   # Para logging y registro de eventos
 import pymysql   # Conector para base de datos MySQL
+import base64    # Para codificar y decodificar datos en base64
+from pymysql import MySQLError
 # Importaciones específicas de Transbank para pagos
 from transbank.webpay.webpay_plus.transaction import Transaction
 from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import WebpayOptions
-import mysql.connector  # Otro conector para MySQL
+import mysql.connector
+from mysql.connector import Error # Otro conector para MySQL
 # Importaciones desde archivo de configuración local
-from config import flask_get_tasa_cambio, flask_login, flask_login_empleado, flask_get_categorias
+from config import flask_login, flask_login_empleado, flask_get_categorias,flask_get_tasa_cambio
 
 from config import (
     DatabaseError,
@@ -77,187 +80,341 @@ swagger_config = {
 # Inicializar Swagger con la configuración
 swagger = Swagger(app, config=swagger_config)
 
+def dict_factory(cursor, row):
+    """Convierte filas de SQLite en diccionarios"""
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        value = row[idx]
+        # Si es un campo de imagen (bytes), convertir a base64
+        if isinstance(value, bytes):
+            try:
+                d[col[0]] = base64.b64encode(value).decode('utf-8')
+            except:
+                d[col[0]] = None
+        else:
+            d[col[0]] = value
+    return d
+
+def execute_query(query, params=None, fetch=False, db_type='producto'):
+    connection = None
+    cursor = None
+    try:
+        # Obtiene la configuración correcta
+        db_config = DATABASE_CONFIGS.get(db_type, DATABASE_CONFIGS['producto'])
+        
+        # Conexión usando pymysql
+        connection = pymysql.connect(**db_config)
+        cursor = connection.cursor()
+        
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        
+        if fetch or query.strip().upper().startswith('SELECT'):
+            result = cursor.fetchall()
+            return result if result else []  
+        else:
+            connection.commit()
+            return cursor.rowcount
+            
+    except MySQLError as e:
+        print(f"Error MySQL [{e.args[0]}]: {e.args[1]}")
+        return [] if fetch else None
+    except Exception as e:
+        print(f"Error inesperado: {str(e)}")
+        return [] if fetch else None
+    finally:
+        if cursor: cursor.close()
+        if connection and connection.open: connection.close()
+
 # ENDPOINTS DE PRODUCTOS
 
-@app.route('/api/productos', methods=['GET'])  # Endpoint para obtener todos los productos
-@swag_from({  # Decorador para documentación de Swagger
-    'tags': ['Productos'],  # Categoría en la documentación
-    'summary': 'Obtiene todos los productos',  # Resumen del endpoint
-    'responses': {  # Posibles respuestas
-        200: {
-            'description': 'Lista de productos obtenida exitosamente',
-            'schema': {  # Esquema de la respuesta
-                'type': 'object',
-                'properties': {
-                    'data': {
-                        'type': 'array',
-                        'items': {
-                            'type': 'object',
-                            'properties': {
-                                'id_producto': {'type': 'string'},
-                                'nom_prod': {'type': 'string'},
-                                'descr_prod': {'type': 'string'},
-                                'precio': {'type': 'integer'},
-                                'marca': {'type': 'string'},
-                                'stock': {'type': 'integer'},
-                                'id_categoria': {'type': 'integer'},
-                                'img_prod': {'type': 'string', 'nullable': True}
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-})
+@app.route('/api/productos/categoria/<int:categoria_min>/<int:categoria_max>', methods=['GET'])
+def get_productos_por_categoria(categoria_min, categoria_max):
+    try:
+        query = '''
+            SELECT * FROM Producto 
+            WHERE id_categoria BETWEEN %s AND %s
+        '''
+        productos = execute_query(query, (categoria_min, categoria_max), fetch=True)
+        
+        for producto in productos:
+            if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
+                producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+        
+        return jsonify({
+            'success': True,
+            'data': productos
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/productos', methods=['GET'])
 def get_productos():
-    # Delega la lógica a una función importada del módulo config
-    return flask_get_productos()
+    try:
+        productos = execute_query('SELECT * FROM Producto', fetch=True)
+        
+        for producto in productos:
+            # Manejo de imágenes compatible con ambos componentes
+            if producto.get('img_prod'):
+                if isinstance(producto['img_prod'], bytes):
+                    # Versión para Herramientas (con prefijo)
+                    producto['img_prod_completa'] = 'data:image/jpeg;base64,' + base64.b64encode(producto['img_prod']).decode('utf-8')
+                    # Versión para Home (solo base64)
+                    producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+                elif producto['img_prod'] == '0.00':
+                    producto['img_prod'] = None
+                    producto['img_prod_completa'] = None
+            else:
+                producto['img_prod'] = None
+                producto['img_prod_completa'] = None
+        
+        return jsonify({
+            'success': True,
+            'data': productos
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
-@app.route('/api/productos/<id_producto>', methods=['GET'])  # Endpoint para obtener un producto específico
-@swag_from({
-    'tags': ['Productos'],
-    'summary': 'Obtiene un producto específico',
-    'parameters': [  # Parámetros requeridos
-        {
-            'name': 'id_producto',  # Nombre del parámetro
-            'in': 'path',  # Ubicación del parámetro (en la URL)
-            'type': 'string',  # Tipo de dato
-            'required': True,  # Si es obligatorio
-            'description': 'ID del producto a buscar'  # Descripción
-        }
-    ],
-    'responses': {
-        200: {
-            'description': 'Producto encontrado exitosamente'
-        }
-    }
-})
+@app.route('/api/productos/<id_producto>', methods=['GET'])
 def get_producto(id_producto):
-    # Delega la lógica a una función importada, pasando el ID del producto
-    return flask_get_producto(id_producto)
-
-# ...existing code...
+    try:
+        productos = execute_query(
+            'SELECT * FROM Producto WHERE id_producto = %s', 
+            (id_producto,),
+            fetch=True
+        )
+        
+        if not productos:
+            return jsonify({
+                'success': False,
+                'error': 'Producto no encontrado'
+            }), 404
+        
+        producto = productos[0]
+        
+        # Convertir imagen a base64 si existe
+        if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
+            producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+        
+        return jsonify({
+            'success': True,
+            'data': producto
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/')
 def home():
     try:
-        conn = get_db_connection(database_type='cliente')  
-        cursor = conn.cursor(pymysql.cursors.DictCursor)
-
-        # Lanzamientos nuevos 
-        cursor.execute("SELECT * FROM productos WHERE lanzamiento = 1 ")
-        lanzamientos = cursor.fetchall()
-
-        # En promoción 
-        cursor.execute("SELECT * FROM productos WHERE promocion = 1 ")
-        promociones = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
+        lanzamientos = execute_query("SELECT * FROM Producto WHERE lanzamiento = 1", fetch=True)
+        promociones = execute_query("SELECT * FROM Producto WHERE promocion = 1", fetch=True)
+        
+        # Para el Home (Flask template) - mantener base64 puro
+        for producto in lanzamientos + promociones:
+            if producto.get('img_prod') and isinstance(producto['img_prod'], bytes):
+                producto['img_prod'] = base64.b64encode(producto['img_prod']).decode('utf-8')
+        
+        return render_template('home.html', lanzamientos=lanzamientos, promociones=promociones)
     except Exception as e:
-        lanzamientos = []
-        promociones = []
-        print(f"Error al obtener productos destacados: {e}")
+        print(f"Error en home: {e}")
+        return render_template('home.html', lanzamientos=[], promociones=[])
 
-    return render_template('home.html', lanzamientos=lanzamientos, promociones=promociones)
+@app.route('/api/productos')
+def api_productos():
+    try:
+        productos = execute_query("SELECT * FROM Producto", fetch=True)
+        
+        for producto in productos:
+            if producto.get('img_prod'):
+                if isinstance(producto['img_prod'], bytes):
+                    producto['img_prod'] = 'data:image/jpeg;base64,' + base64.b64encode(producto['img_prod']).decode('utf-8')
+                elif producto['img_prod'] != '0.00' and not producto['img_prod'].startswith('data:image'):
+                    producto['img_prod'] = 'data:image/jpeg;base64,' + producto['img_prod']
+        
+        return jsonify({
+            'success': True,
+            'data': productos
+        })
+    except Exception as e:
+        print(f"Error en api/productos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-
-@app.route('/api/productos', methods=['POST'])  # Endpoint para crear un nuevo producto
-@swag_from({
-    'tags': ['Productos'],
-    'summary': 'Crea un nuevo producto',
-    'parameters': [
-        {
-            'name': 'producto',  # Parámetro en el body de la petición
-            'in': 'body',
-            'required': True,
-            'schema': {  # Esquema del objeto producto
-                'type': 'object',
-                'properties': {
-                    'id_producto': {'type': 'string'},
-                    'nom_prod': {'type': 'string'},
-                    'descr_prod': {'type': 'string'},
-                    'precio': {'type': 'integer'},
-                    'marca': {'type': 'string'},
-                    'stock': {'type': 'integer'},
-                    'id_categoria': {'type': 'integer'},
-                    'img_prod': {'type': 'string', 'nullable': True}
-                }
-            }
-        }
-    ],
-    'responses': {
-        200: {
-            'description': 'Producto creado exitosamente'
-        }
-    }
-})
+@app.route('/api/productos', methods=['POST'])
 def crear_producto():
-    data = request.get_json()  # Obtener datos JSON del body de la petición
-    return flask_crear_producto(data)  # Delegar a función importada
+    try:
+        data = request.get_json()
+        
+        # Validar datos requeridos
+        required_fields = ['id_producto', 'nom_prod', 'precio', 'stock', 'id_categoria']
+        for field in required_fields:
+            if field not in data or data[field] in (None, ''):
+                return jsonify({
+                    'success': False,
+                    'error': f'El campo {field} es requerido'
+                }), 400
+        
+        # Verificar si el producto ya existe
+        existing = execute_query(
+            'SELECT id_producto FROM Producto WHERE id_producto = %s', 
+            (data['id_producto'],),
+            fetch=True
+        )
+        
+        if existing:
+            return jsonify({
+                'success': False,
+                'error': 'Ya existe un producto con ese ID'
+            }), 400
+        
+        # Convertir imagen base64 a bytes si existe
+        img_data = None
+        if 'img_prod' in data and data['img_prod']:
+            try:
+                img_data = base64.b64decode(data['img_prod'])
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': 'Imagen inválida: ' + str(e)
+                }), 400
+        
+        # Insertar producto
+        execute_query('''
+            INSERT INTO Producto 
+            (id_producto, nom_prod, descr_prod, precio, marca, stock, id_categoria, 
+             lanzamiento, promocion, img_prod)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            data['id_producto'],
+            data.get('nom_prod', ''),
+            data.get('descr_prod', ''),
+            float(data['precio']),
+            data.get('marca', ''),
+            int(data['stock']),
+            int(data['id_categoria']),
+            int(data.get('lanzamiento', 0)),
+            int(data.get('promocion', 0)),
+            img_data
+        ), fetch=False)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Producto creado exitosamente'
+        })
+        
+    except ValueError as e:
+        return jsonify({
+            'success': False,
+            'error': 'Datos inválidos: ' + str(e)
+        }), 400
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
-@app.route('/api/productos/<id_producto>', methods=['PUT'])  # Endpoint para modificar producto existente
-@swag_from({
-    'tags': ['Productos'],
-    'summary': 'Modifica un producto existente',
-    'parameters': [
-        {
-            'name': 'id_producto',  # ID del producto en la URL
-            'in': 'path',
-            'type': 'string',
-            'required': True,
-            'description': 'ID del producto a modificar'
-        },
-        {
-            'name': 'producto',  # Datos del producto en el body
-            'in': 'body',
-            'required': True,
-            'schema': {
-                'type': 'object',
-                'properties': {
-                    'nom_prod': {'type': 'string'},
-                    'descr_prod': {'type': 'string'},
-                    'precio': {'type': 'integer'},
-                    'marca': {'type': 'string'},
-                    'stock': {'type': 'integer'},
-                    'id_categoria': {'type': 'integer'},
-                    'img_prod': {'type': 'string', 'nullable': True}
-                }
-            }
-        }
-    ],
-    'responses': {
-        200: {
-            'description': 'Producto actualizado exitosamente'
-        }
-    }
-})
-def modificar_producto(id_producto):
-    data = request.get_json()  # Obtener datos JSON del body
-    return flask_modificar_producto(id_producto, data)  # Delegar con ID y datos
+@app.route('/api/productos/<id_producto>', methods=['PUT'])
+def actualizar_producto(id_producto):
+    try:
+        data = request.get_json()
+        
+        # Obtener el producto actual primero
+        producto_actual = execute_query(
+            "SELECT img_prod FROM Producto WHERE id_producto = %s",
+            (id_producto,),
+            fetch=True
+        )[0] if execute_query(
+            "SELECT 1 FROM Producto WHERE id_producto = %s",
+            (id_producto,),
+            fetch=True
+        ) else None
 
-@app.route('/api/productos/<id_producto>', methods=['DELETE'])  # Endpoint para eliminar producto
-@swag_from({
-    'tags': ['Productos'],
-    'summary': 'Elimina un producto',
-    'parameters': [
-        {
-            'name': 'id_producto',
-            'in': 'path',
-            'type': 'string',
-            'required': True,
-            'description': 'ID del producto a eliminar'
-        }
-    ],
-    'responses': {
-        200: {
-            'description': 'Producto eliminado exitosamente'
-        }
-    }
-})
+        if not producto_actual:
+            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
+
+       
+        img_prod = producto_actual['img_prod']
+        if 'img_prod' in data and data['img_prod'] not in (None, '', '0'):
+            if data['img_prod'].startswith('data:image'):
+                # Extraer solo el base64 si viene con prefijo
+                img_prod = data['img_prod'].split(',')[1]
+            else:
+                img_prod = data['img_prod']
+
+        # Actualizar manteniendo la imagen original si no hay nueva
+        execute_query('''
+            UPDATE Producto SET
+            nom_prod=%s, descr_prod=%s, precio=%s, marca=%s,
+            stock=%s, id_categoria=%s, lanzamiento=%s, promocion=%s,
+            img_prod=%s
+            WHERE id_producto=%s
+        ''', (
+            data['nom_prod'],
+            data.get('descr_prod', ''),
+            float(data['precio']),
+            data.get('marca', ''),
+            int(data['stock']),
+            int(data.get('id_categoria', 0)),
+            int(data.get('lanzamiento', 0)),
+            int(data.get('promocion', 0)),
+            img_prod,  
+            id_producto
+        ), fetch=False)
+
+        return jsonify({
+            'success': True,
+            'message': 'Producto actualizado',
+            'data': {**data, 'img_prod': img_prod}
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/productos/<string:id_producto>', methods=['DELETE'])
 def eliminar_producto(id_producto):
-    return flask_eliminar_producto(id_producto)  # Delegar a función importada
+    try:
+        # Verificar si el producto existe
+        existing = execute_query(
+            'SELECT id_producto FROM Producto WHERE id_producto = %s', 
+            (id_producto,),
+            fetch=True
+        )
+        
+        if not existing:
+            return jsonify({
+                'success': False,
+                'error': 'Producto no encontrado'
+            }), 404
+        
+        # Eliminar producto
+        execute_query(
+            'DELETE FROM Producto WHERE id_producto = %s', 
+            (id_producto,),
+            fetch=False
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Producto eliminado exitosamente'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 # ENDPOINTS DE AUTENTICACIÓN
 

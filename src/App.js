@@ -1,6 +1,6 @@
-import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { CurrencyProvider } from './contexts/MonedaContext';
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import HeaderFerremax from './components/header/header';
 import ImgBanner from './components/carousel/imagenesCarousel';
 import FooterFerremax from './components/footer/footer';
@@ -13,9 +13,12 @@ const CarritoPage = lazy(() => import('./pages/Carrito/Carrito'));
 const AdminPage = lazy(() => import('./pages/Admin/Admin'));
 const TransbankPayment = lazy(() => import('./components/webPay/pagoTransbank'));
 const PaymentResult = lazy(() => import('./components/webPay/resultadoPago'));
-const ProductoPage = lazy(() => import('./pages/Productos/ProductoPage'));
+const HerramientasPage = lazy(() => import('./pages/Productos/HerramientasPage.jsx'));
 const GestionEmpleados = lazy(() => import('./pages/Admin/AdminPages/GestionEmpleados.jsx'));
 const GestionInventario = lazy(() => import('./pages/Admin/AdminPages/GestionInventario.jsx'));
+const TornillosPage = lazy(() => import('./pages/Productos/Tornillos/TornillosPage.jsx'));
+const FijacionesPage = lazy(() => import('./pages/Productos/Fijaciones/FijacionesPage.jsx'));
+const MedicionPage = lazy(() => import('./pages/Productos/EquiposDeMedicion/MedicionPage.jsx'));
 
 function Inicio() {
   return (
@@ -39,12 +42,13 @@ function Inicio() {
 
 function App() {
   return (
-    <CurrencyProvider>
+    <Router>
       <div className="page-container">
         <header>
           <HeaderFerremax />
           <NavbarF />
         </header>
+
         <main className="content-wrap">
           <Suspense fallback={<div>Cargando...</div>}>
             <Routes>
@@ -54,17 +58,20 @@ function App() {
               <Route path="/registro" element={<RegistroUser />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/TuCarrito" element={<CarritoPage />} />
-              <Route path="/Producto" element={<ProductoPage />} />
+              <Route path="/Herramientas" element={<HerramientasPage />} />
               <Route path="/webPay" element={<TransbankPayment />} />
               <Route path="/resultado" element={<PaymentResult />} />
               <Route path="/admin/empleados" element={<GestionEmpleados />} />
               <Route path="/admin/inventario" element={<GestionInventario />} />
+              <Route path="/Tornillos" element={<TornillosPage />} />
+              <Route path="/Fijaciones" element={<FijacionesPage />} />
+              <Route path="/equipos-de-medicion" element={<MedicionPage />} />
             </Routes>
           </Suspense>
         </main>
         <FooterFerremax />
       </div>
-    </CurrencyProvider>
+    </Router>
   );
 }
 
