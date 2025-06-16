@@ -13,6 +13,9 @@ import PaymentResult from './components/webPay/resultadoPago';
 import HerramientasPage from './pages/Productos/HerramientasPage.jsx';
 import GestionEmpleados from './pages/Admin//AdminPages/GestionEmpleados.jsx';
 import GestionInventario from './pages/Admin//AdminPages/GestionInventario.jsx';
+import TornillosPage from './pages/Productos/Tornillos/TornillosPage.jsx';
+import FijacionesPage from './pages/Productos/Fijaciones/FijacionesPage.jsx';
+import MedicionPage from './pages/Productos/EquiposDeMedicion/MedicionPage.jsx';
 
 
 function Inicio() {
@@ -56,6 +59,9 @@ function App() {
           <Route path="/resultado" element={<PaymentResult />} />
           <Route path="/admin/empleados" element={<GestionEmpleados />} />
           <Route path="/admin/inventario" element={<GestionInventario />} />
+          <Route path="/Tornillos" element={<TornillosPage />} />
+          <Route path="/Fijaciones" element={<FijacionesPage />} />
+          <Route path="/equipos-de-medicion" element={<MedicionPage />} />
         </Routes>
       </main>
       <FooterFerremax />
