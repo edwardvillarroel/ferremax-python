@@ -3,24 +3,24 @@ import './Nav.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { AiOutlineShoppingCart, AiOutlineUser } from 'react-icons/ai';
 import { useState, useRef, useContext } from 'react';
+import { useCurrency } from '../../contexts/MonedaContext';
 import { AuthContext } from '../../pages/InicioSesion/authContext';
 import Swal from 'sweetalert2';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Dropdown from 'react-bootstrap/Dropdown';
 
 
+
 function NavbarF() {
   const { isLoggedIn, rol, logout, user } = useContext(AuthContext);
+  const { currentCurrency, changeCurrency, loading } = useCurrency();
   const navigate = useNavigate();
 
   const [showPopover, setShowPopover] = useState(false);
-  const popoverTarget = useRef(null);
+  const popoverTarget = useRef(null);  
 
-  const [buttonText, setButtonText] = useState('CLP');
-
-  const handleSelect = (eventKey) => {
-    const Moneda = eventKey;
-    setButtonText(Moneda);
+   const handleSelect = async (eventKey) => {
+    await changeCurrency(eventKey);
   };
 
   const cerrarSesion = () => {
@@ -80,34 +80,21 @@ function NavbarF() {
                       <AiOutlineUser className="user-icon me-1" />Inicia sesión</Nav.Link>
                     <Nav.Link as={Link} to="/registro">Regístrate</Nav.Link></>) :
                   (<Button className='btn-salir' onClick={cerrarSesion}>Cerrar Sesión</Button>)}
-
-                <Dropdown as={ButtonGroup} onSelect={handleSelect}>
-                  <Button variant="success">{buttonText}</Button>
-                  <Dropdown.Toggle split variant="success" id="dropdown-split-basic" />
-                  <Dropdown.Menu>
-                    <Dropdown.Item eventKey="CLP" href="#/action-1">
-                      CLP
-                    </Dropdown.Item>
-                    <Dropdown.Item eventKey="ARS" href="#/action-2">
-                      ARS
-                    </Dropdown.Item>
-                    <Dropdown.Item eventKey="B" href="#/action-3">
-                      B (Boliviano)
-                    </Dropdown.Item>
-                    <Dropdown.Item eventKey="R$" href="#/action-4">
-                      R$ (Real)
-                    </Dropdown.Item>
-                    <Dropdown.Item eventKey="EUR" href="#/action-5">
-                      EUR
-                    </Dropdown.Item>
-                    <Dropdown.Item eventKey="USD" href="#/action-6">
-                      USD
-                    </Dropdown.Item>
-                    <Dropdown.Item eventKey="S/" href="#/action-7">
-                      S/ (SOL)
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
+                  <Dropdown as={ButtonGroup} onSelect={handleSelect}>
+                    <Button variant="success" disabled={loading}>
+                      {loading?'Cargando...':currentCurrency}
+                    </Button>
+                    <Dropdown.Toggle split variant="success" id="dropdown-split-basic" disabled={loading} />
+                    <Dropdown.Menu>
+                      <Dropdown.Item eventKey="CLP">CLP (Peso Chileno)</Dropdown.Item>
+                      <Dropdown.Item eventKey="ARS">ARS (Peso Argentino)</Dropdown.Item>
+                      <Dropdown.Item eventKey="BOL">BOL (Boliviano)</Dropdown.Item>
+                      <Dropdown.Item eventKey="BRL">BRL (Real Brasileño)</Dropdown.Item>
+                      <Dropdown.Item eventKey="EUR">EUR (Euro)</Dropdown.Item>
+                      <Dropdown.Item eventKey="USD">USD (Dólar)</Dropdown.Item>
+                      <Dropdown.Item eventKey="PEN">PEN (Sol Peruano)</Dropdown.Item>
+                    </Dropdown.Menu>                      
+                  </Dropdown>            
               </Nav>
             </div>
 

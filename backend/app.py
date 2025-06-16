@@ -13,7 +13,7 @@ from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import WebpayOptions
 import mysql.connector  # Otro conector para MySQL
 # Importaciones desde archivo de configuración local
-from config import flask_login, flask_login_empleado, flask_get_categorias
+from config import flask_get_tasa_cambio, flask_login, flask_login_empleado, flask_get_categorias
 
 from config import (
     DatabaseError,
@@ -690,6 +690,32 @@ def eliminar_empleado(id_empleado):
 @app.route('/api/categorias', methods=['GET'])
 def get_categorias():
     return flask_get_categorias()
+
+
+
+@app.route('/api/exchange-rate/<string:currency>', methods=['GET'])
+def get_exchange_rate(currency):
+    """
+    Endpoint para obtener tasa de cambio
+    CORREGIDO: Maneja correctamente la respuesta de la función
+    """
+    try:
+        # La función devuelve (dict, status_code)
+        result, status_code = flask_get_tasa_cambio(currency)
+        
+        # Flask automáticamente convierte el dict a JSON
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        # Si hay algún error no manejado
+        return jsonify({
+            'success': False,
+            'message': f'Error del servidor: {str(e)}',
+            'currency': currency.upper()
+        }), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 # Punto de entrada de la aplicación
 if __name__ == '__main__':

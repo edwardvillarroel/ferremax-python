@@ -1,9 +1,11 @@
 
 import base64
+import datetime
 import os,pymysql,json
 from typing import Dict, Any,List,Optional,Tuple,Union
 import os
 from dotenv import load_dotenv
+import requests
 
 
 load_dotenv()
@@ -33,6 +35,15 @@ DATABASE_CONFIGS = {
         'port': int(os.environ.get('MYSQL_PORT', 3306)),
         'cursorclass': pymysql.cursors.DictCursor
     }
+}
+
+Codigos_Tasa_Cambio={
+    'ARS': 'F072.CLP.ARS.N.O.D',
+    'BRL': 'F072.CLP.BRL.N.O.D', 
+    'BOL': 'F072.CLP.BOL.N.O.D',
+    'USD': 'F073.TCO.PRE.Z.D',
+    'EUR': 'F072.CLP.EUR.N.O.D',
+    'PEN': 'F072.CLP.PEN.N.O.D'
 }
 class DatabaseError(Exception):
    pass
@@ -578,3 +589,87 @@ def flask_eliminar_empleado(id_empleado: str):
         return {"error": str(e)}, 400
     except Exception as e:
         return {"error": str(e)}, 500
+    
+#Weas de conversion de monedas    
+def get_tasa_cambio(codigo):    
+    try:
+        if codigo == 'CLP':
+            return 1.0
+            
+        api_code = Codigos_Tasa_Cambio.get(codigo)
+        if not api_code:
+            return None
+            
+        # Intentar con fechas de los últimos 3 días
+        for i in range(3):
+            fecha = (datetime.datetime.now() - datetime.timedelta(days=i)).strftime('%Y-%m-%d')
+            
+            # Construir URL con el formato correcto
+            url = f"https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx?user=da.parrap@duocuc.cl&pass=Ferremas23&firstdate={fecha}&timeseries={api_code}&function=GetSeries"
+            
+            print(f"🔗 Intentando con URL: {url}")
+            
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            print(f"📊 Respuesta de la API: {data}")
+            
+            if data.get('Codigo') == 0 and data.get('Series', {}).get('Obs'):
+                rate_value_str = data['Series']['Obs'][0]['value']
+                try:
+                    # Manejar tanto punto como coma decimal
+                    rate = float(rate_value_str.replace(',', '.'))
+                    if rate > 0:
+                        print(f"✅ Tasa obtenida: {rate} para {codigo}")
+                        return rate
+                except (ValueError, TypeError) as e:
+                    print(f"❌ Error al convertir valor: {rate_value_str}, error: {e}")
+                    continue
+            else:
+                print(f"⚠️ No hay datos para fecha {fecha}")
+        
+        print(f"❌ No se pudo obtener tasa para {codigo} después de 3 intentos")
+        return None
+        
+    except requests.exceptions.RequestException as e:
+        print(f"🌐 Error de conexión: {e}")
+        return None
+    except Exception as e:
+        print(f"💥 Error general: {e}")
+        return None
+
+def flask_get_tasa_cambio(codigo: str):
+    """
+    Función Flask que maneja la respuesta HTTP para obtener tasa de cambio
+    CORREGIDA: Ahora devuelve tupla (dict, status_code) para Flask
+    """
+    try:
+        print(f"🔄 Solicitando tasa de cambio para: {codigo}")
+        tasa = get_tasa_cambio(codigo)
+        
+        if tasa is not None:
+            result = {
+                'success': True,
+                'currency': codigo.upper(),
+                'rate': float(tasa)
+            }
+            print(f"✅ Devolviendo resultado exitoso: {result}")
+            return result, 200  # Devolver tupla con status code
+        else:
+            result = {
+                'success': False,
+                'message': f'No se pudo obtener la tasa de cambio para {codigo}',
+                'currency': codigo.upper()
+            }
+            print(f"❌ Devolviendo error: {result}")
+            return result, 404  # Devolver tupla con status code de error
+            
+    except Exception as e:
+        error_result = {
+            'success': False,
+            'message': f'Error interno del servidor: {str(e)}',
+            'currency': codigo.upper() if codigo else 'UNKNOWN'
+        }
+        print(f"💥 Error interno: {error_result}")
+        return error_result, 500  # Devolver tupla con status code de error

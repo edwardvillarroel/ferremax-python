@@ -1,11 +1,10 @@
-// ...importaciones...
 import { Button, Card, Col, Row } from 'react-bootstrap';
 import './desarrollo.css';
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import { useCurrency } from '../../contexts/MonedaContext'; // Importar useCurrency
 
-// Función auxiliar para renderizar la imagen
 const extractRealBase64 = (encodedString) => {
   try {
     const decoded = atob(encodedString);
@@ -36,8 +35,9 @@ const renderProductImage = (producto) => {
   return `data:image/${realImageData.type};base64,${realImageData.base64}`;
 };
 
-// Renderizado de tarjeta reutilizable
 function ProductCards({ productos }) {
+  const { formatPrice } = useCurrency(); // Usar el hook useCurrency para formatPrice
+
   const handleAddToCart = async (producto) => {
     try {
       Swal.fire({
@@ -72,7 +72,8 @@ function ProductCards({ productos }) {
                 <Card.Title className="card-title">{producto.nom_prod}</Card.Title>
                 <Card.Subtitle>{producto.marca}</Card.Subtitle>
                 <Card.Text>
-                  <span className="current-price">${producto.precio}</span>
+                  {/* Utilizar formatPrice para mostrar el precio */}
+                  <span className="current-price">{formatPrice(producto.precio)}</span>
                   <p className="description">{producto.descr_prod}</p>
                   <span className="stock">Stock: {producto.stock} unidades</span>
                 </Card.Text>
@@ -92,7 +93,6 @@ function ProductCards({ productos }) {
   );
 }
 
-// Lanzamientos nuevos (máximo 3)
 export function MediaCardLanzamientos() {
   const [productos, setProductos] = useState([]); 
 
@@ -120,7 +120,6 @@ export function MediaCardLanzamientos() {
   return <ProductCards productos={productos} />;
 }
 
-// En promoción (máximo 3)
 export function MediaCardPromocion() {
   const [productos, setProductos] = useState([]); 
 
