@@ -16,7 +16,7 @@ from transbank.webpay.webpay_plus.transaction import WebpayOptions
 import mysql.connector
 from mysql.connector import Error # Otro conector para MySQL
 # Importaciones desde archivo de configuración local
-from config import flask_login, flask_login_empleado, flask_get_categorias,flask_get_tasa_cambio
+from config import DATABASE_CONFIGS, flask_login, flask_login_empleado, flask_get_categorias,flask_get_tasa_cambio
 
 from config import (
     DatabaseError,
