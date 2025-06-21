@@ -45,7 +45,7 @@ function AdminPage() {
               <Card.Text className="text-center">
                 Genera y revisa informes de ventas mensuales.
               </Card.Text>
-              <Button variant="info" className="mt-auto w-100 text-white">
+              <Button variant="info" className="mt-auto w-100 text-white" onClick={() => navigate('/admin/ventas')}>
                 Ver informes de ventas
               </Button>
             </Card.Body>

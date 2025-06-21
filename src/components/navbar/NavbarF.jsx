@@ -17,9 +17,11 @@ function NavbarF() {
   const navigate = useNavigate();
 
   const [showPopover, setShowPopover] = useState(false);
-  const popoverTarget = useRef(null);  
+  const popoverTarget = useRef(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showToolsDropdown, setShowToolsDropdown] = useState(false);
 
-   const handleSelect = async (eventKey) => {
+  const handleSelect = async (eventKey) => {
     await changeCurrency(eventKey);
   };
 
@@ -80,21 +82,21 @@ function NavbarF() {
                       <AiOutlineUser className="user-icon me-1" />Inicia sesión</Nav.Link>
                     <Nav.Link as={Link} to="/registro">Regístrate</Nav.Link></>) :
                   (<Button className='btn-salir' onClick={cerrarSesion}>Cerrar Sesión</Button>)}
-                  <Dropdown as={ButtonGroup} onSelect={handleSelect}>
-                    <Button variant="success" disabled={loading}>
-                      {loading?'Cargando...':currentCurrency}
-                    </Button>
-                    <Dropdown.Toggle split variant="success" id="dropdown-split-basic" disabled={loading} />
-                    <Dropdown.Menu>
-                      <Dropdown.Item eventKey="CLP">CLP (Peso Chileno)</Dropdown.Item>
-                      <Dropdown.Item eventKey="ARS">ARS (Peso Argentino)</Dropdown.Item>
-                      <Dropdown.Item eventKey="BOL">BOL (Boliviano)</Dropdown.Item>
-                      <Dropdown.Item eventKey="BRL">BRL (Real Brasileño)</Dropdown.Item>
-                      <Dropdown.Item eventKey="EUR">EUR (Euro)</Dropdown.Item>
-                      <Dropdown.Item eventKey="USD">USD (Dólar)</Dropdown.Item>
-                      <Dropdown.Item eventKey="PEN">PEN (Sol Peruano)</Dropdown.Item>
-                    </Dropdown.Menu>                      
-                  </Dropdown>            
+                <Dropdown as={ButtonGroup} onSelect={handleSelect}>
+                  <Button variant="success" disabled={loading}>
+                    {loading ? 'Cargando...' : currentCurrency}
+                  </Button>
+                  <Dropdown.Toggle split variant="success" id="dropdown-split-basic" disabled={loading} />
+                  <Dropdown.Menu>
+                    <Dropdown.Item eventKey="CLP">CLP (Peso Chileno)</Dropdown.Item>
+                    <Dropdown.Item eventKey="ARS">ARS (Peso Argentino)</Dropdown.Item>
+                    <Dropdown.Item eventKey="BOL">BOL (Boliviano)</Dropdown.Item>
+                    <Dropdown.Item eventKey="BRL">BRL (Real Brasileño)</Dropdown.Item>
+                    <Dropdown.Item eventKey="EUR">EUR (Euro)</Dropdown.Item>
+                    <Dropdown.Item eventKey="USD">USD (Dólar)</Dropdown.Item>
+                    <Dropdown.Item eventKey="PEN">PEN (Sol Peruano)</Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
               </Nav>
             </div>
 
@@ -142,20 +144,71 @@ function NavbarF() {
 
           <Navbar.Collapse id="responsive-navbar-nav">
             <Nav className="mx-auto text-center d-flex flex-wrap justify-content-center align-items-center nav-links-container">
-              <NavDropdown title="Herramientas" id="collapsible-nav-dropdown"onClick={() => navigate('/herramientas')}>
-                <NavDropdown.Item as={Link} to="/Herramientas-Manuales" id="tools1">Herramientas Manuales</NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/Materiales-Basicos" id="tools2">Materiales Básicos</NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/Equipo-de-seguridad" id="tools3">Equipos de Seguridad</NavDropdown.Item>
+              <NavDropdown
+                title="Herramientas"
+                id="collapsible-nav-dropdown"
+                to="/herramientas"
+                show={showToolsDropdown}
+                onMouseEnter={() => setShowToolsDropdown(true)}
+                onMouseLeave={() => setShowToolsDropdown(false)}
+                onToggle={() => { }}
+                onClick={() => navigate('/herramientas')}
+              >
+                <NavDropdown.Item
+                  as={Link}
+                  to="/herramientas-manuales"
+                  id="tools1"
+                  onClick={() => setShowToolsDropdown(false)} 
+                >
+                  Herramientas Manuales
+                </NavDropdown.Item>
+                <NavDropdown.Item
+                  as={Link}
+                  to="/materiales-Basicos"
+                  id="tools2"
+                  onClick={() => setShowToolsDropdown(false)} 
+                >
+                  Materiales Básicos
+                </NavDropdown.Item>
+                <NavDropdown.Item
+                  as={Link}
+                  to="/equipos-de-seguridad"
+                  id="tools3"
+                  onClick={() => setShowToolsDropdown(false)} 
+                >
+                  Equipos de Seguridad
+                </NavDropdown.Item>
               </NavDropdown>
               <Nav.Link as={Link} to="/tornillos" id="tools4">Tornillos</Nav.Link>
               <Nav.Link as={Link} to="/fijaciones" id="tools5">Fijaciones</Nav.Link>
               <Nav.Link as={Link} to="/equipos-de-medicion" id="tools6">Equipos de Medición</Nav.Link>
 
               {rol === 'admin' && (
-                <NavDropdown title="Administración" id="admin-nav-dropdown">
-                  <NavDropdown.Item as={Link} to="/admin/usuarios">Gestión de usuarios</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/productos">Control de inventariosc</NavDropdown.Item>
-                </NavDropdown>)}
+                <NavDropdown
+                  title="Administración"
+                  id="admin-nav-dropdown"
+                  show={showDropdown}
+                  onMouseEnter={() => setShowDropdown(true)}
+                  onMouseLeave={() => setShowDropdown(false)}
+                  onToggle={() => { }}
+                  onClick={() => navigate('/admin')}
+                >
+                  <NavDropdown.Item
+                    as={Link}
+                    to="/admin/empleados"
+                    onClick={() => setShowDropdown(false)} 
+                  >
+                    Gestión de empleados
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    as={Link}
+                    to="/admin/inventario"
+                    onClick={() => setShowDropdown(false)} 
+                  >
+                    Control de inventario
+                  </NavDropdown.Item>
+                </NavDropdown>
+              )}
 
               <div className="auth-links-inline d-lg-none d-flex align-items-center ms-3">
                 <Nav.Link as={Link} to="/inicio" className="d-inline-flex align-items-center">

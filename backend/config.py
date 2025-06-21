@@ -1,4 +1,3 @@
-
 import base64
 import datetime
 import os,pymysql,json
@@ -32,6 +31,14 @@ DATABASE_CONFIGS = {
         'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
         'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
         'database': os.environ.get('MYSQL_DATABASE_EMPLEADO', 'Empleado'),
+        'port': int(os.environ.get('MYSQL_PORT', 3306)),
+        'cursorclass': pymysql.cursors.DictCursor
+    },
+    'transaccion': {
+        'host': os.environ.get('MYSQL_HOST', 'ferremax.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
+        'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
+        'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
+        'database': os.environ.get('MYSQL_DATABASE_TRANSACCION', 'Transaccion'),  # Corregido a 'Transaccion'
         'port': int(os.environ.get('MYSQL_PORT', 3306)),
         'cursorclass': pymysql.cursors.DictCursor
     }

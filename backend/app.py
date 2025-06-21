@@ -871,6 +871,21 @@ def get_exchange_rate(currency):
             'currency': currency.upper()
         }), 500
 
+@app.route('/api/transacciones', methods=['GET'])
+def get_transacciones():
+    try:
+        query = 'SELECT * FROM Transaccion'  # Nombre correcto de la tabla
+        transacciones = execute_query(query, fetch=True, db_type='transaccion')
+        return jsonify({
+            'success': True,
+            'data': transacciones
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
 
