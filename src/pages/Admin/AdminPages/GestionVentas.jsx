@@ -13,13 +13,19 @@ const GestionVentas = () => {
     const fetchTransacciones = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/transacciones');
-        const data = (response.data.data || []).map(t => ({
-          id: t.id_transaccion,
-          fecha: t.fecha_transaccion,
-          cliente: t.run_cliente,
-          monto: t.monto,
-          estado: t.estado || 'Completado',
-        }));
+        const data = (response.data.data || []).map(t => {
+          let sucursal = t.sucursal || 'Sucursal desconocida';
+          return {
+            id: t.id_transaccion,
+            fecha: t.fecha_transaccion,
+            cliente: t.run_cliente,
+            monto: t.monto,
+            estado: t.estado || 'Completado',
+            sucursal,
+            metodo_pago: t.metodo_pago || '',
+            descripcion: t.descripcion || '',
+          };
+        });
         setTransacciones(data);
       } catch (error) {
         console.error('Error al cargar las transacciones:', error);
@@ -49,13 +55,16 @@ const GestionVentas = () => {
     doc.text('Informe de Ventas', 14, 15);
     autoTable(doc, {
       startY: 25,
-      head: [['ID', 'Fecha', 'Rut Cliente', 'Monto', 'Estado']],
+      head: [['ID', 'Fecha', 'Rut Cliente', 'Monto', 'Estado', 'Sucursal', 'Método de Pago', 'Detalle']],
       body: transacciones.map(t => [
         t.id,
         formatFecha(t.fecha),
         t.cliente,
         `$${Number(t.monto).toLocaleString()}`,
-        t.estado
+        t.estado,
+        t.sucursal,
+        t.metodo_pago,
+        t.descripcion
       ]),
     });
     doc.save('informe_ventas.pdf');
@@ -88,6 +97,21 @@ const GestionVentas = () => {
       title: 'Estado',
       dataIndex: 'estado',
       key: 'estado',
+    },
+    {
+      title: 'Sucursal',
+      dataIndex: 'sucursal',
+      key: 'sucursal',
+    },
+    {
+      title: 'Método de Pago',
+      dataIndex: 'metodo_pago',
+      key: 'metodo_pago',
+    },
+    {
+      title: 'Detalle',
+      dataIndex: 'descripcion',
+      key: 'descripcion',
     },
   ];
 

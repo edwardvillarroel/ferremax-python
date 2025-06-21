@@ -38,7 +38,7 @@ DATABASE_CONFIGS = {
         'host': os.environ.get('MYSQL_HOST', 'ferremax.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
         'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
         'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
-        'database': os.environ.get('MYSQL_DATABASE_TRANSACCION', 'Transaccion'),  # Corregido a 'Transaccion'
+        'database': os.environ.get('MYSQL_DATABASE_TRANSACCION', 'Transaccion'),  
         'port': int(os.environ.get('MYSQL_PORT', 3306)),
         'cursorclass': pymysql.cursors.DictCursor
     }
