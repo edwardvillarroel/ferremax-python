@@ -5,3 +5,7 @@ pymysql
 transbank-sdk
 mysql-connector
 dotenv
+pytest
+pytest-flask
+pytest-mock
+requests
