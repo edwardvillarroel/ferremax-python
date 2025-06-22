@@ -27,6 +27,8 @@ import MedicionPage from './pages/Productos/EquiposDeMedicion/MedicionPage.jsx';
 import GestionEmpleados from './pages/Admin/AdminPages/GestionEmpleados.jsx';
 import GestionInventario from './pages/Admin/AdminPages/GestionInventario.jsx';
 import GestionVentas from './pages/Admin/AdminPages/GestionVentas.jsx';
+import GestionPromociones from './pages/Admin/AdminPages/GestionPromociones.jsx';
+import InformesDesempeño from './pages/Admin/AdminPages/InformesDesempeño.jsx';
 
 function Inicio() {
   return (
@@ -74,6 +76,8 @@ function App() {
             <Route path="/admin/empleados" element={<GestionEmpleados />} />
             <Route path="/admin/inventario" element={<GestionInventario />} />
             <Route path="/admin/ventas" element={<GestionVentas />} />
+            <Route path="/admin/promociones" element={<GestionPromociones />} />
+            <Route path="/admin/desempeño" element={<InformesDesempeño />} />
           </Routes>
         </main>
         <FooterFerremax />
