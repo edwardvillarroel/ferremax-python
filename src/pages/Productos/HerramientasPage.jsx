@@ -67,9 +67,14 @@ const HerramientasPage = () => {
     }, [categorias]);
 
     const handleAddToCart = (producto) => {
-        agregarAlCarrito(producto);
-        alert('El producto se agregó al carrito correctamente');
-    }
+        const productoConImagen = {
+            ...producto,
+            img_prod: renderProductImage(producto)
+        };
+
+        agregarAlCarrito(productoConImagen);
+        Swal.fire('Producto agregado', '', 'success');
+    };
 
     // Cargar datos iniciales
     useEffect(() => {

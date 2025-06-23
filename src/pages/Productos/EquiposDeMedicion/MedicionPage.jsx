@@ -1,7 +1,40 @@
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import './MedicionPage.css';
 import { useCarrito } from '../../Carrito/CarritoContext';
 import BtnAddCard from '../../../btnAddCard';
+
+// Función para extraer base64 real si viene codificada
+const extractRealBase64 = (encodedString) => {
+    try {
+        const decoded = atob(encodedString);
+        const match = decoded.match(/data:image\/([^;]+);base64,([^)]+)/);
+        if (match) {
+            return {
+                type: match[1],
+                base64: match[2]
+            };
+        }
+    } catch (error) {
+        return null;
+    }
+    return null;
+};
+
+// Función para formatear la imagen correctamente
+const renderProductImage = (producto) => {
+    if (!producto.img_prod) {
+        return process.env.PUBLIC_URL + '/imagenes/unaviable.jpg';
+    }
+    if (producto.img_prod.startsWith('data:image/')) {
+        return producto.img_prod;
+    }
+    const realImageData = extractRealBase64(producto.img_prod.trim());
+    if (!realImageData) {
+        return process.env.PUBLIC_URL + '/imagenes/unaviable.jpg';
+    }
+    return `data:image/${realImageData.type};base64,${realImageData.base64}`;
+};
 
 const MedicionPage = () => {
     const { agregarAlCarrito } = useCarrito();
@@ -76,8 +109,14 @@ const MedicionPage = () => {
     };
 
     const handleAddToCart = (producto) => {
-        agregarAlCarrito(producto);
-        alert('El equipo de medición se agregó al carrito correctamente');
+        const productoConImagen = {
+            ...producto,
+            img_prod: renderProductImage(producto) // Sobrescribe img_prod con la versión formateada
+        };
+
+        agregarAlCarrito(productoConImagen);
+
+        Swal.fire('Producto agregado', '', 'success');
     };
 
     if (loading) {
@@ -137,7 +176,7 @@ const MedicionPage = () => {
                         <div className="card h-100 shadow-sm equipo-card">
                             <img
                                 className="card-img-top"
-                                src={producto.img_prod ? producto.img_prod : '/imagenes/unaviable.jpg'}
+                                src={renderProductImage(producto)}
                                 alt={producto.nom_prod}
                                 style={{ height: '200px', objectFit: 'contain' }}
                             />

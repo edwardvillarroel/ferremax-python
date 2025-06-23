@@ -21,7 +21,7 @@ function CarritoPage() {
         }
     };
 
-    // Función para manejar el cambio de cantidad
+
     const handleCantidadChange = (idProducto, nuevaCantidad) => {
         if (nuevaCantidad > 0) {
             actualizarCantidad(idProducto, nuevaCantidad);
@@ -63,7 +63,7 @@ function CarritoPage() {
                         {carrito.map((item) => (
                             <div className="cart-item-card" key={item.id_producto}>
                                 <img
-                                    src={item.img_prod || '/ruta-imagen.jpg'}
+                                    src={item.img_prod}
                                     alt={item.nom_prod}
                                     className="cart-item-img"
                                 />
