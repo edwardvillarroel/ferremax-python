@@ -886,9 +886,6 @@ def get_transacciones():
             'error': str(e)
         }), 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
 # Punto de entrada de la aplicación
 if __name__ == '__main__':
     # Ejecutar aplicación Flask en modo debug
