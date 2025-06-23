@@ -1,0 +1,118 @@
+name: tests
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      # Servicio de MySQL para pruebas que requieran base de datos
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_producto
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Create test database tables
+      run: |
+        cd backend
+        # Crear script SQL para inicializar las tablas de prueba
+        cat > setup_test_db.sql << 'EOF'
+        CREATE DATABASE IF NOT EXISTS test_producto;
+        USE test_producto;
+        
+        CREATE TABLE IF NOT EXISTS Producto (
+          id_producto VARCHAR(20) PRIMARY KEY,
+          nom_prod VARCHAR(100) NOT NULL,
+          descr_prod TEXT,
+          precio INT NOT NULL,
+          marca VARCHAR(50),
+          stock INT NOT NULL,
+          id_categoria INT NOT NULL,
+          img_prod LONGTEXT,
+          lanzamiento TINYINT(1) DEFAULT 0,
+          promocion TINYINT(1) DEFAULT 0
+        );
+        
+        CREATE DATABASE IF NOT EXISTS test_cliente;
+        USE test_cliente;
+        
+        CREATE TABLE IF NOT EXISTS Cliente (
+          run_cliente VARCHAR(12),
+          dvrun_cliente CHAR(1),
+          nombre_cliente VARCHAR(100),
+          apellidos_cliente VARCHAR(100),
+          email_cliente VARCHAR(100) PRIMARY KEY,
+          password_cliente VARCHAR(100)
+        );
+        
+        CREATE DATABASE IF NOT EXISTS test_empleado;
+        USE test_empleado;
+        
+        CREATE TABLE IF NOT EXISTS Empleado (
+          id_empleado VARCHAR(20) PRIMARY KEY,
+          pnom_emp VARCHAR(50),
+          snom_emp VARCHAR(50),
+          appat_emp VARCHAR(50),
+          apmat_emp VARCHAR(50),
+          correo_emp VARCHAR(100),
+          id_cargo INT,
+          password_emp VARCHAR(100)
+        );
+        EOF
+        
+        # Ejecutar el script SQL
+        mysql -h 127.0.0.1 -P 3306 -u root -proot < setup_test_db.sql
+        
+    - name: Create test environment file
+      run: |
+        cd backend
+        cat > test_variables.env << 'EOF'
+        MYSQL_HOST=127.0.0.1
+        MYSQL_USER=root
+        MYSQL_PASSWORD=root
+        MYSQL_DATABASE_PRODUCTO=test_producto
+        MYSQL_DATABASE_CLIENTE=test_cliente
+        MYSQL_DATABASE_EMPLEADO=test_empleado
+        MYSQL_PORT=3306
+        EOF
+        
+    - name: Run unit tests
+      run: |
+        cd backend
+        # Usar variables de entorno de prueba
+        export $(cat test_variables.env | xargs)
+        pytest test_unit.py -v
+        
+    - name: Run integration tests
+      run: |
+        cd backend
+        # Usar variables de entorno de prueba
+        export $(cat test_variables.env | xargs)
+        pytest test_integration.py -v
