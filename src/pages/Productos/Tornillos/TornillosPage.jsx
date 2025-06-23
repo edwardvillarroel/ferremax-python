@@ -60,7 +60,14 @@ const TornillosPage = () => {
 
         agregarAlCarrito(productoConImagen);
 
-        Swal.fire('Producto agregado', '', 'success');
+        Swal.fire({
+            title: 'Producto agregado',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            willClose: () => {
+            }
+        });
     };
 
 
@@ -220,7 +227,7 @@ const TornillosPage = () => {
             <Row>
                 {productosFiltrados.length > 0 ? (
                     productosFiltrados.map(producto => (
-                        <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} className="mb-4">
+                        <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} xl={2} className="mb-4">
                             <Card className="h-100 shadow-sm">
                                 <Card.Img
                                     variant="top"

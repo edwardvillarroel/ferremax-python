@@ -1,10 +1,13 @@
-import { Button, Card, Col, Row } from 'react-bootstrap';
+import { Card, Col, Row } from 'react-bootstrap';
 import './desarrollo.css';
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
-import { useCurrency } from '../../contexts/MonedaContext'; // Importar useCurrency
+import BtnAddCard from '../../btnAddCard';
+import { useCarrito } from '../../pages/Carrito/CarritoContext';
+import { useCurrency } from '../../contexts/MonedaContext';
 
+// Función para extraer base64 de la imagen
 const extractRealBase64 = (encodedString) => {
   try {
     const decoded = atob(encodedString);
@@ -12,7 +15,7 @@ const extractRealBase64 = (encodedString) => {
     if (match) {
       return {
         type: match[1],
-        base64: match[2]
+        base64: match[2],
       };
     }
   } catch (error) {
@@ -21,6 +24,7 @@ const extractRealBase64 = (encodedString) => {
   return null;
 };
 
+// Función para renderizar la imagen del producto
 const renderProductImage = (producto) => {
   if (!producto.img_prod) {
     return '/imagenes/unaviable.jpg';
@@ -35,25 +39,46 @@ const renderProductImage = (producto) => {
   return `data:image/${realImageData.type};base64,${realImageData.base64}`;
 };
 
-function ProductCards({ productos }) {
-  const { formatPrice } = useCurrency(); // Usar el hook useCurrency para formatPrice
+function MediaCardLanzamientos() {
+  const [productos, setProductos] = useState([]);
+  const { agregarAlCarrito } = useCarrito();
+  const { formatPrice } = useCurrency(); // Usamos el hook para formatear precios
 
-  const handleAddToCart = async (producto) => {
-    try {
-      Swal.fire({
-        icon: 'success',
-        title: 'Producto agregado',
-        text: 'El producto se agregó al carrito correctamente',
-        timer: 1500,
-        showConfirmButton: false
-      });
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo agregar el producto al carrito'
-      });
-    }
+  useEffect(() => {
+    const fetchProductos = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/productos');
+        const productosData = Array.isArray(response.data.data) ? response.data.data : [];
+        const lanzamientos = productosData
+          .filter((prod) => prod.lanzamiento === 1) // Filtrar productos de lanzamiento
+          .slice(0, 4); // Limitar a los primeros 4
+        setProductos(lanzamientos);
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudieron cargar los lanzamientos',
+        });
+        setProductos([]);
+      }
+    };
+
+    fetchProductos();
+  }, []);
+
+  const handleAddToCart = (producto) => {
+    const productoConImagen = {
+      ...producto,
+      img_prod: renderProductImage(producto),
+    };
+
+    agregarAlCarrito(productoConImagen);
+    Swal.fire({
+      title: 'Producto agregado',
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false,
+    });
   };
 
   return (
@@ -62,25 +87,26 @@ function ProductCards({ productos }) {
         productos.map((producto) => (
           <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} className="mb-4">
             <Card className="cardPromocion">
-              <Card.Img 
-                variant="top" 
+              <Card.Img
+                variant="top"
                 src={renderProductImage(producto)}
                 alt={producto.nom_prod}
               />
-              <div className="card-divider"/>
+              <div className="card-divider" />
               <Card.Body className="card-body-custom">
                 <Card.Title className="card-title">{producto.nom_prod}</Card.Title>
                 <Card.Subtitle>{producto.marca}</Card.Subtitle>
                 <Card.Text>
-                  {/* Utilizar formatPrice para mostrar el precio */}
                   <span className="current-price">{formatPrice(producto.precio)}</span>
                   <p className="description">{producto.descr_prod}</p>
                   <span className="stock">Stock: {producto.stock} unidades</span>
                 </Card.Text>
                 <div className="button-wrapper">
-                  <Button className="button-card" onClick={() => handleAddToCart(producto)}>
-                    Añadir al carrito
-                  </Button>
+                  <BtnAddCard
+                    producto={producto}
+                    handleAddToCart={handleAddToCart}
+                    className="button-card"
+                  />
                 </div>
               </Card.Body>
             </Card>
@@ -93,35 +119,10 @@ function ProductCards({ productos }) {
   );
 }
 
-export function MediaCardLanzamientos() {
-  const [productos, setProductos] = useState([]); 
-
-  useEffect(() => {
-    const fetchProductos = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/productos');
-        const productosData = Array.isArray(response.data.data) ? response.data.data : [];
-        const lanzamientos = productosData
-          .filter(prod => prod.lanzamiento === 1)
-          .slice(0, 4);
-        setProductos(lanzamientos);
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudieron cargar los lanzamientos'
-        });
-        setProductos([]);
-      }
-    };
-    fetchProductos();
-  }, []);
-
-  return <ProductCards productos={productos} />;
-}
-
-export function MediaCardPromocion() {
-  const [productos, setProductos] = useState([]); 
+function MediaCardPromocion() {
+  const [productos, setProductos] = useState([]);
+  const { agregarAlCarrito } = useCarrito();
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -129,20 +130,73 @@ export function MediaCardPromocion() {
         const response = await axios.get('http://localhost:5000/api/productos');
         const productosData = Array.isArray(response.data.data) ? response.data.data : [];
         const promociones = productosData
-          .filter(prod => prod.promocion === 1)
-          .slice(0, 4);
+          .filter((prod) => prod.promocion === 1) // Filtrar productos de promoción
+          .slice(0, 4); // Limitar a los primeros 4
         setProductos(promociones);
       } catch (error) {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No se pudieron cargar las promociones'
+          text: 'No se pudieron cargar las promociones',
         });
         setProductos([]);
       }
     };
+
     fetchProductos();
   }, []);
 
-  return <ProductCards productos={productos} />;
+  const handleAddToCart = (producto) => {
+    const productoConImagen = {
+      ...producto,
+      img_prod: renderProductImage(producto),
+    };
+
+    agregarAlCarrito(productoConImagen);
+    Swal.fire({
+      title: 'Producto agregado',
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  };
+
+  return (
+    <Row>
+      {Array.isArray(productos) && productos.length > 0 ? (
+        productos.map((producto) => (
+          <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} className="mb-4">
+            <Card className="cardPromocion">
+              <Card.Img
+                variant="top"
+                src={renderProductImage(producto)}
+                alt={producto.nom_prod}
+              />
+              <div className="card-divider" />
+              <Card.Body className="card-body-custom">
+                <Card.Title className="card-title">{producto.nom_prod}</Card.Title>
+                <Card.Subtitle>{producto.marca}</Card.Subtitle>
+                <Card.Text>
+                  <span className="current-price">{formatPrice(producto.precio)}</span>
+                  <p className="description">{producto.descr_prod}</p>
+                  <span className="stock">Stock: {producto.stock} unidades</span>
+                </Card.Text>
+                <div >
+                  <BtnAddCard
+                    producto={producto}
+                    handleAddToCart={handleAddToCart}
+                    className="button-card"
+                  />
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))
+      ) : (
+        <p>No hay productos disponibles</p>
+      )}
+    </Row>
+  );
 }
+
+export { MediaCardLanzamientos, MediaCardPromocion };

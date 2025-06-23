@@ -116,7 +116,14 @@ const MedicionPage = () => {
 
         agregarAlCarrito(productoConImagen);
 
-        Swal.fire('Producto agregado', '', 'success');
+        Swal.fire({
+            title: 'Producto agregado',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            willClose: () => {
+            }
+        });
     };
 
     if (loading) {
