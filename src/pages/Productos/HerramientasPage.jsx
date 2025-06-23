@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Card, Row, Col, Spinner } from 'react-bootstrap';
 import axios from 'axios';
-import Button from 'react-bootstrap/Button';
+import BtnAddCard from '../../btnAddCard';
 import './HerramientasPage.css';
 import Swal from 'sweetalert2';
+import { useCarrito } from '../Carrito/CarritoContext';
+
 
 const extractRealBase64 = (encodedString) => {
     try {
@@ -37,6 +39,7 @@ const renderProductImage = (producto) => {
 
 
 const HerramientasPage = () => {
+    const { agregarAlCarrito } = useCarrito();
     const [productos, setProductos] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
     const [categorias, setCategorias] = useState([
@@ -63,23 +66,10 @@ const HerramientasPage = () => {
         return categoria ? categoria.nom_cat : 'Categoría Desconocida';
     }, [categorias]);
 
-    const handleAddToCart = async (producto) => {
-        try {
-            Swal.fire({
-                icon: 'success',
-                title: 'Producto agregado',
-                text: 'El producto se agregó al carrito correctamente',
-                timer: 1500,
-                showConfirmButton: false
-            });
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo agregar el producto al carrito'
-            });
-        }
-    };
+    const handleAddToCart = (producto) => {
+        agregarAlCarrito(producto);
+        alert('El producto se agregó al carrito correctamente');
+    }
 
     // Cargar datos iniciales
     useEffect(() => {
@@ -283,9 +273,10 @@ const HerramientasPage = () => {
                                         </small>
                                     </div>
                                     <div className="button-wrapper">
-                                        <Button className="button-card" onClick={() => handleAddToCart(producto)}>
-                                            Añadir al carrito
-                                        </Button>
+                                        <BtnAddCard
+                                            producto={producto}
+                                            handleAddToCart={handleAddToCart}
+                                        />
                                     </div>
                                 </Card.Body>
                             </Card>

@@ -3,146 +3,120 @@ import React, { useState, useEffect } from 'react';
 import { Button } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import { useCarrito } from '../Carrito/CarritoContext';
 
 function CarritoPage() {
     const navigate = useNavigate();
-    const [carrito, setCarrito] = useState({
-        items: [{
-            id: 1,
-            nombre: "Producto de Prueba",
-            precio: 1000,
-            cantidad: 2,
-            subtotal: 2000
-        }],
-        total: 0
-    });
-
-    useEffect(() => {
-        const obtenerCarrito = async () => {
-            try {
-                const response = await fetch('http://localhost:5000/api/carrito');
-                if (!response.ok) throw new Error('Error al obtener el carrito');
-                const data = await response.json();
-                setCarrito(data);
-            } catch (error) {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo cargar el carrito'
-                });
-            }
-        };
-
-        obtenerCarrito();
-    }, []);
-
-    const actualizarCantidad = async (idProducto, nuevaCantidad) => {
-        try {
-            const response = await fetch('http://localhost:5000/api/carrito', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id_producto: idProducto,
-                    cantidad: nuevaCantidad
-                })
-            });
-
-            if (!response.ok) throw new Error('Error al actualizar cantidad');
-            const data = await response.json();
-            setCarrito(data);
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo actualizar la cantidad'
-            });
-        }
-    };
+    const { carrito, eliminarDelCarrito, obtenerTotal, actualizarCantidad } = useCarrito();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const eliminarProducto = async (idProducto) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/carrito/${idProducto}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) throw new Error('Error al eliminar producto');
-            const data = await response.json();
-            setCarrito(data);
+            eliminarDelCarrito(idProducto);
+            Swal.fire('Producto eliminado', '', 'success');
         } catch (error) {
             console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo eliminar el producto'
-            });
+            Swal.fire('Error', 'No se pudo eliminar el producto', 'error');
         }
     };
 
-    const iniciarPago = () => {
-        navigate('/webpay');
+    // Función para manejar el cambio de cantidad
+    const handleCantidadChange = (idProducto, nuevaCantidad) => {
+        if (nuevaCantidad > 0) {
+            actualizarCantidad(idProducto, nuevaCantidad);
+        }
     };
+
+    useEffect(() => {
+        setLoading(false);
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="container text-center my-5">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-3">Cargando carrito...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="container text-center my-5">
+                <div className="alert alert-danger">{error}</div>
+            </div>
+        );
+    }
 
     return (
         <div className="div-carrito">
             <h1>Carrito de Compras</h1>
 
-            {carrito.items.length === 0 ? (
+            {carrito.length === 0 ? (
                 <div className="cart-empty">Tu carrito está vacío</div>
             ) : (
                 <>
                     <div className="cart-list">
-                        {carrito.items.map((item) => (
-                            <div className="cart-item-card" key={item.id}>
-                                <img src="/ruta-imagen.jpg" alt={item.nombre} className="cart-item-img" />
+                        {carrito.map((item) => (
+                            <div className="cart-item-card" key={item.id_producto}>
+                                <img
+                                    src={item.img_prod || '/ruta-imagen.jpg'}
+                                    alt={item.nom_prod}
+                                    className="cart-item-img"
+                                />
                                 <div className="cart-item-info">
-                                    <div className="cart-item-name">{item.nombre}</div>
-                                    <div className="cart-item-price">Precio: ${item.precio.toLocaleString()}</div>
-                                </div>
-
-                                <div className="cart-item-controls">
-                                    <div className="qty-control">
+                                    <div className="cart-item-name">{item.nom_prod}</div>
+                                    <div className="cart-item-price">
+                                        Precio: ${item.precio.toLocaleString()}
+                                    </div>
+                                    <div className="cart-item-quantity">
                                         <Button
                                             variant="outline-secondary"
                                             size="sm"
+                                            className='btn-cantidad'
                                             onClick={() =>
-                                                actualizarCantidad(item.id, item.cantidad > 1 ? item.cantidad - 1 : 1)
+                                                handleCantidadChange(item.id_producto, item.cantidad - 1)
                                             }
                                         >
                                             -
                                         </Button>
-                                        <span>{item.cantidad}</span>
+                                        {item.cantidad}
                                         <Button
                                             variant="outline-secondary"
                                             size="sm"
-                                            onClick={() => actualizarCantidad(item.id, item.cantidad + 1)}
+                                            className='btn-cantidad'
+                                            onClick={() =>
+                                                handleCantidadChange(item.id_producto, item.cantidad + 1)
+                                            }
                                         >
                                             +
                                         </Button>
                                     </div>
-
-                                    <div className="cart-item-subtotal">
-                                        Subtotal: ${item.subtotal.toLocaleString()}
-                                    </div>
-
-
-
                                 </div>
-                                <button className="basurero" onClick={() => eliminarProducto(item.id)}>
-                                    X
-                                </button>
 
+                                <div className="cart-item-controls">
+                                    <div className="cart-item-subtotal">
+                                        Subtotal: ${item.precio * item.cantidad}
+                                    </div>
+                                </div>
+
+                                <button
+                                    className="basurero"
+                                    onClick={() => eliminarProducto(item.id_producto)}
+                                >X</button>
                             </div>
                         ))}
                     </div>
 
                     <div className="cart-total-section">
-                        Total: ${carrito.total.toLocaleString()}
+                        Total: ${obtenerTotal().toLocaleString()}
                     </div>
 
                     <div className="cart-actions">
-                        <Button variant="success" onClick={iniciarPago} className="mt-3">
+                        <Button variant="success" onClick={() => navigate('/webpay')} className="mt-3">
                             Pagar
                         </Button>
                     </div>

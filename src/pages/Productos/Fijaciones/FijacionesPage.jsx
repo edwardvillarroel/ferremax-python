@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './FijacionesPage.css';
+import { useCarrito } from '../../Carrito/CarritoContext';
+import BtnAddCard from '../../../btnAddCard';
 
 const extractRealBase64 = (encodedString) => {
     try {
@@ -32,6 +34,7 @@ const renderProductImage = (producto) => {
 };
 
 const FijacionesPage = () => {
+    const { agregarAlCarrito } = useCarrito();
     const [productos, setProductos] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -45,15 +48,6 @@ const FijacionesPage = () => {
     // Estados para los rangos de precios
     const [precioMinBD, setPrecioMinBD] = useState(0);
     const [precioMaxBD, setPrecioMaxBD] = useState(0);
-
-    const handleAddToCart = async (producto) => {
-        try {
-            // Aquí implementarías la lógica de SweetAlert2
-            alert('La fijación se agregó al carrito correctamente');
-        } catch (error) {
-            alert('No se pudo agregar el producto al carrito');
-        }
-    };
 
     // Cargar datos iniciales
     useEffect(() => {
@@ -124,6 +118,12 @@ const FijacionesPage = () => {
         setPrecioMax('');
         setBusqueda('');
     };
+
+    const handleAddToCart = (producto) => {
+        agregarAlCarrito(producto);
+        alert('El equipo de fijación se agregó al carrito correctamente');
+    };
+
 
     if (loading) {
         return (
@@ -244,13 +244,10 @@ const FijacionesPage = () => {
                                         </span>
                                     </div>
                                     <div className="button-wrapper mt-auto">
-                                        <button 
-                                            className="btn btn-primary w-100" 
-                                            onClick={() => handleAddToCart(producto)}
-                                            disabled={producto.stock === 0}
-                                        >
-                                            {producto.stock > 0 ? 'Añadir al carrito' : 'Sin stock'}
-                                        </button>
+                                        <BtnAddCard
+                                            producto={producto}
+                                            handleAddToCart={handleAddToCart}
+                                        />
                                     </div>
                                 </div>
                             </div>

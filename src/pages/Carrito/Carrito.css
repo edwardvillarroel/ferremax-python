@@ -86,10 +86,15 @@
 }
 
 .basurero {
-  font-size: 22px;
-  color: #dc3545;
-  background: none;
+  background-color: transparent;
   border: none;
+  color: #1d1b1bcb;
+  transition: background-color 0.3s ease;
+}
+
+.basurero:hover {
+  background-color: transparent;
+  color: #ff0000;
   cursor: pointer;
 }
 
@@ -110,4 +115,16 @@
   padding: 40px;
   font-size: 1.2rem;
   color: #777;
+}
+
+.btn-cantidad {
+  border: none !important;
+  background-color: transparent !important;
+  padding: 10px 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.btn-cantidad:hover {
+  color: #333;
 }

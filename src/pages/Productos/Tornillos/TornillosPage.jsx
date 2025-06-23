@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Card, Row, Col, Spinner } from 'react-bootstrap';
 import axios from 'axios';
-import Button from 'react-bootstrap/Button';
-import './TornillosPage.css'; 
+import BtnAddCard from '../../../btnAddCard';
+import './TornillosPage.css';
 import Swal from 'sweetalert2';
+import { useCarrito } from '../../Carrito/CarritoContext';
 
 const extractRealBase64 = (encodedString) => {
     try {
@@ -36,6 +37,7 @@ const renderProductImage = (producto) => {
 };
 
 const TornillosPage = () => {
+    const { agregarAlCarrito } = useCarrito();
     const [productos, setProductos] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -50,22 +52,9 @@ const TornillosPage = () => {
     const [precioMinBD, setPrecioMinBD] = useState(0);
     const [precioMaxBD, setPrecioMaxBD] = useState(0);
 
-    const handleAddToCart = async (producto) => {
-        try {
-            Swal.fire({
-                icon: 'success',
-                title: 'Producto agregado',
-                text: 'El tornillo se agregó al carrito correctamente',
-                timer: 1500,
-                showConfirmButton: false
-            });
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo agregar el producto al carrito'
-            });
-        }
+    const handleAddToCart = (producto) => {
+        agregarAlCarrito(producto);
+        alert('El producto se agregó al carrito correctamente');
     };
 
     // Cargar datos iniciales
@@ -255,13 +244,10 @@ const TornillosPage = () => {
                                         </span>
                                     </div>
                                     <div className="button-wrapper mt-auto">
-                                        <Button 
-                                            className="button-card w-100" 
-                                            onClick={() => handleAddToCart(producto)}
-                                            disabled={producto.stock === 0}
-                                        >
-                                            {producto.stock > 0 ? 'Añadir al carrito' : 'Sin stock'}
-                                        </Button>
+                                        <BtnAddCard
+                                            producto={producto}
+                                            handleAddToCart={handleAddToCart}
+                                        />
                                     </div>
                                 </Card.Body>
                             </Card>
