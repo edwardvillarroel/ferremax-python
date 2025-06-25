@@ -58,7 +58,7 @@ INTEGRATION_TYPE = IntegrationType.TEST  # Tipo de integración (TEST para prueb
 transactions = {}
 
 # URLs para el flujo de pagos
-RETURN_URL = "http://localhost:5000/api/webpay/retorno"  # URL donde Transbank envía la respuesta
+RETURN_URL = os.getenv('WEBPAY_RETURN_URL', "http://localhost:5000/api/webpay/retorno")  # URL donde Transbank envía la respuesta
 FINAL_URL = "http://localhost:3001/resultado"  # URL final donde se redirige al usuario
 
 # Configuración de Swagger para documentación de la API

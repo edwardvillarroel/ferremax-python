@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, ArrowLeft, Loader2 } from 'lucide-react';
 
 const PaymentResult = ({ 
-  apiBaseUrl = 'http://localhost:5000/api',
+  apiBaseUrl = process.env.REACT_APP_API_URL || '/api',
   onBackToPayment,
   className = ''
 }) => {

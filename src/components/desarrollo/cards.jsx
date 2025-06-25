@@ -6,6 +6,7 @@ import axios from 'axios';
 import BtnAddCard from '../../btnAddCard';
 import { useCarrito } from '../../pages/Carrito/CarritoContext';
 import { useCurrency } from '../../contexts/MonedaContext';
+import API_BASE_URL from '../../config/apiConfig';
 
 // Función para extraer base64 de la imagen
 const extractRealBase64 = (encodedString) => {
@@ -47,7 +48,7 @@ function MediaCardLanzamientos() {
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/productos');
+        const response = await axios.get(`${API_BASE_URL}/productos`);
         const productosData = Array.isArray(response.data.data) ? response.data.data : [];
         const lanzamientos = productosData
           .filter((prod) => prod.lanzamiento === 1) // Filtrar productos de lanzamiento
@@ -127,7 +128,7 @@ function MediaCardPromocion() {
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/productos');
+        const response = await axios.get(`${API_BASE_URL}/productos`);
         const productosData = Array.isArray(response.data.data) ? response.data.data : [];
         const promociones = productosData
           .filter((prod) => prod.promocion === 1) // Filtrar productos de promoción

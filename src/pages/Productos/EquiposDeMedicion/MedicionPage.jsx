@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import './MedicionPage.css';
 import { useCarrito } from '../../Carrito/CarritoContext';
 import BtnAddCard from '../../../btnAddCard';
+import API_BASE_URL from '../../../config/apiConfig';
 
 // Función para extraer base64 real si viene codificada
 const extractRealBase64 = (encodedString) => {
@@ -54,7 +55,7 @@ const MedicionPage = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:5000/api/productos');
+                const response = await fetch(`${API_BASE_URL}/productos`);
                 const data = await response.json();
 
                 if (data.success) {

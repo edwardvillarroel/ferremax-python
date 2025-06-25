@@ -4,6 +4,7 @@ import { DownloadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import API_BASE_URL from '../../../config/apiConfig';
 
 const GestionVentas = () => {
   const [transacciones, setTransacciones] = useState([]);
@@ -12,7 +13,7 @@ const GestionVentas = () => {
   useEffect(() => {
     const fetchTransacciones = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/transacciones');
+        const response = await axios.get(`${API_BASE_URL}/transacciones`);
         const data = (response.data.data || []).map(t => {
           let sucursal = t.sucursal || 'Sucursal desconocida';
           return {
