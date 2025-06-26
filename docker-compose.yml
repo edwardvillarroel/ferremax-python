@@ -30,7 +30,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=9000
-      - REACT_APP_API_URL=http://localhost:5000/api
+      - REACT_APP_API_URL=http://backend:5000/api
       - WDS_SOCKET_HOST=0.0.0.0
       - WDS_SOCKET_PORT=9000
     depends_on:

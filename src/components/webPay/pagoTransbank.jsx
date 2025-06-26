@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import './pagowebpay.css';
 
 const TransbankPayment = ({
-  apiBaseUrl = 'http://localhost:5000/api',
+apiBaseUrl = process.env.REACT_APP_API_URL || '/api',
   onPaymentSuccess,
   onPaymentError,
   returnUrl = `${window.location.origin}/payment-result`,

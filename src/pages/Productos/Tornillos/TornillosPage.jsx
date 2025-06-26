@@ -5,6 +5,7 @@ import BtnAddCard from '../../../btnAddCard';
 import './TornillosPage.css';
 import Swal from 'sweetalert2';
 import { useCarrito } from '../../Carrito/CarritoContext';
+import API_BASE_URL from '../../../config/apiConfig';
 
 const extractRealBase64 = (encodedString) => {
     try {
@@ -79,7 +80,7 @@ const TornillosPage = () => {
                 setLoading(true);
 
                 // Cargar productos
-                const response = await axios.get('http://localhost:5000/api/productos');
+                const response = await axios.get(`${API_BASE_URL}/productos`);
 
                 if (response.data.success) {
                     // Filtrar solo tornillos (id_categoria = 5)

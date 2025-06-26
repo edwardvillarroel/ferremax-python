@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Table } from 'react-bootstrap';
 import axios from 'axios';
+import API_BASE_URL from '../../../config/apiConfig';
 
 function GestionPromociones() {
   const [promociones, setPromociones] = useState([
@@ -14,7 +15,7 @@ function GestionPromociones() {
 
   useEffect(() => {
     // Cargar productos desde el endpoint
-    axios.get('http://localhost:5000/api/productos')
+    axios.get(`${API_BASE_URL}/productos`)
       .then(res => {
         if (res.data.success) setProductos(res.data.data);
       });

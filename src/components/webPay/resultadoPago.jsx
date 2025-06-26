@@ -2,8 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const PaymentResult = ({ apiBaseUrl = 'http://localhost:5000/api', className = '' }) => {
+
+const PaymentResult = ({
+  apiBaseUrl = process.env.REACT_APP_API_URL || '/api',
+  onBackToPayment,
+  className = ''
+}) => {
   const navigate = useNavigate();
+
   const [paymentResult, setPaymentResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

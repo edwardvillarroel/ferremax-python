@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import API_BASE_URL from '../config/apiConfig';
 
 const MonedaContext = createContext();
 
@@ -44,7 +45,7 @@ export const CurrencyProvider = ({ children }) => {
             timer: 500 
         });
       } else {
-        requestUrl = `http://localhost:5000/api/exchange-rate/${newCurrency}`; 
+        requestUrl = `${API_BASE_URL}/exchange-rate/${newCurrency}`;
         const response = await axios.get(requestUrl);
         
         let actualData = response.data; 
