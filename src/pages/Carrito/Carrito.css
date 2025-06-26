@@ -1,33 +1,31 @@
-.div-carrito {
-  padding: 20px 100px;
-  max-width: 1000px;
-  margin: 0 auto;
-  background-color: #ffffff;
-}
-
-.div-carrito h1 {
+h1 {
   margin-bottom: 30px;
-  font-size: 2rem;
+  font-size: 2.5rem;
   text-align: center;
   color: #333;
 }
 
 .cart-list {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  flex-direction: column !important;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
 }
 
 .cart-item-card {
+  width: auto !important;
+  height: auto !important;
+  flex-direction: row !important;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  background-color: #fdfdfd;
-  border: 1px solid #ddd;
+  align-items: center !important;
+  border: 1px solid #ccc;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
   border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.3s ease;
+  background: #fff;
 }
 
 .cart-item-card:hover {
@@ -35,8 +33,9 @@
 }
 
 .cart-item-img {
-  width: 100px;
-  height: 100px;
+  width: 100px !important;
+  height: 100px !important;
+  margin-left: 20px;
   object-fit: cover;
   border-radius: 6px;
   margin-right: 20px;
@@ -46,7 +45,7 @@
   flex: 2;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 15px;
 }
 
 .cart-item-name {
@@ -64,6 +63,70 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
+
+  .cart-list {
+    display: flex;
+    flex-wrap: wrap;
+    /* para que los items bajen a la siguiente fila si no caben */
+    gap: 20px;
+    /* espacio entre productos */
+  }
+
+  .cart-item-card {
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 180px;
+    /* ancho fijo para que queden alineados */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  .cart-item-name {
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .cart-item-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .cart-item-img {
+    width: 100%;
+    height: auto;
+    margin-bottom: 8px;
+    object-fit: contain;
+  }
+
+  .cart-item-info {
+    text-align: center;
+    width: 100%;
+  }
+
+  .cart-item-price,
+  .cart-item-quantity,
+  .cart-item-subtotal {
+    margin: 4px 0;
+  }
+
+  /* Posicionar botón "basurero" en esquina superior derecha */
+  .basurero {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: transparent;
+    border: none;
+    color: red;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
   gap: 10px;
   margin-top: 10px;
   flex-wrap: wrap;
@@ -90,6 +153,7 @@
   border: none;
   color: #1d1b1bcb;
   transition: background-color 0.3s ease;
+  margin-right: 30px;
 }
 
 .basurero:hover {
@@ -127,4 +191,10 @@
 
 .btn-cantidad:hover {
   color: #333;
+}
+
+@media (max-width: 600px) {
+  .cart-item-card {
+    width: 100%;
+  }
 }

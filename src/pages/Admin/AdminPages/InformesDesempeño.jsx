@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Container, Row, Col, Card, ProgressBar, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Bar, Pie } from 'react-chartjs-2';
 import { Chart, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js';
 import jsPDF from 'jspdf';

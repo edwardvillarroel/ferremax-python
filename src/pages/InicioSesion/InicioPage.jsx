@@ -6,7 +6,7 @@ import { AuthContext } from '../InicioSesion/authContext';
 import Swal from 'sweetalert2';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import { testConnection } from '../../api';
+// import { testConnection } from '../../api';
 
 const InicioPage = () => {
   const [showPassword, setPasword] = useState(false);
@@ -14,7 +14,7 @@ const InicioPage = () => {
   const [password, setPassword] = useState('');
   const [esEmpleado, setEsEmpleado] = useState(false); // Nuevo estado
   const navigate = useNavigate();
-  const [connectionStatus, setConnectionStatus] = useState('');
+  // const [connectionStatus, setConnectionStatus] = useState('');
   const { login, loginWithGoogle } = useContext(AuthContext);
 
   const paswordShow = () => setPasword(!showPassword);
