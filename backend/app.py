@@ -871,8 +871,6 @@ def get_exchange_rate(currency):
             'currency': currency.upper()
         }), 500
 
-<<<<<<< HEAD
-=======
 @app.route('/api/transacciones', methods=['GET'])
 def get_transacciones():
     try:
@@ -888,7 +886,6 @@ def get_transacciones():
             'error': str(e)
         }), 500
 
->>>>>>> 08f6f188ffe23a05c9b201f8cfd851aefcada9bb
 # Punto de entrada de la aplicación
 if __name__ == '__main__':
     # Ejecutar aplicación Flask en modo debug
