@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, GithubActions ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, GithubActions ]
 
 env:
   REGISTRY: ghcr.io
