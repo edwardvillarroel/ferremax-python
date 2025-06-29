@@ -1,0 +1,268 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, GithubActions ]
+  pull_request:
+    branches: [ master, GithubActions ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}-backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}-frontend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_producto
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Create test database tables
+      run: |
+        cd backend
+        cat > setup_test_db.sql << 'EOF'
+        CREATE DATABASE IF NOT EXISTS test_producto;
+        USE test_producto;
+        
+        CREATE TABLE IF NOT EXISTS Producto (
+          id_producto VARCHAR(20) PRIMARY KEY,
+          nom_prod VARCHAR(100) NOT NULL,
+          descr_prod TEXT,
+          precio INT NOT NULL,
+          marca VARCHAR(50),
+          stock INT NOT NULL,
+          id_categoria INT NOT NULL,
+          img_prod LONGTEXT,
+          lanzamiento TINYINT(1) DEFAULT 0,
+          promocion TINYINT(1) DEFAULT 0
+        );
+        
+        CREATE DATABASE IF NOT EXISTS test_cliente;
+        USE test_cliente;
+        
+        CREATE TABLE IF NOT EXISTS Cliente (
+          run_cliente VARCHAR(12),
+          dvrun_cliente CHAR(1),
+          nombre_cliente VARCHAR(100),
+          apellidos_cliente VARCHAR(100),
+          email_cliente VARCHAR(100) PRIMARY KEY,
+          password_cliente VARCHAR(100)
+        );
+        
+        CREATE DATABASE IF NOT EXISTS test_empleado;
+        USE test_empleado;
+        
+        CREATE TABLE IF NOT EXISTS Empleado (
+          id_empleado VARCHAR(20) PRIMARY KEY,
+          pnom_emp VARCHAR(50),
+          snom_emp VARCHAR(50),
+          appat_emp VARCHAR(50),
+          apmat_emp VARCHAR(50),
+          correo_emp VARCHAR(100),
+          id_cargo INT,
+          password_emp VARCHAR(100)
+        );
+        EOF
+        
+        mysql -h 127.0.0.1 -P 3306 -u root -proot < setup_test_db.sql
+        
+    - name: Create test environment file
+      run: |
+        cd backend
+        cat > test_variables.env << 'EOF'
+        MYSQL_HOST=127.0.0.1
+        MYSQL_USER=root
+        MYSQL_PASSWORD=root
+        MYSQL_DATABASE_PRODUCTO=test_producto
+        MYSQL_DATABASE_CLIENTE=test_cliente
+        MYSQL_DATABASE_EMPLEADO=test_empleado
+        MYSQL_PORT=3306
+        EOF
+        
+    - name: Run unit tests
+      run: |
+        cd backend
+        export $(cat test_variables.env | xargs)
+        pytest test_unit.py -v --junitxml=test-results-unit.xml
+        
+    - name: Run integration tests
+      run: |
+        cd backend
+        export $(cat test_variables.env | xargs)
+        pytest test_integration.py -v --junitxml=test-results-integration.xml
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: backend/test-results-*.xml
+
+  build-and-test-docker:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Create test environment file
+      run: |
+        cp variables.env .env
+        
+    - name: Build and test with Docker Compose
+      run: |
+        # Construir las imágenes
+        docker-compose build
+        
+        # Verificar que las imágenes se construyeron correctamente
+        docker images
+        
+        # Probar que los contenedores pueden iniciarse
+        docker-compose up -d
+        
+        # Esperar a que los servicios estén listos
+        sleep 30
+        
+        # Verificar que los servicios están corriendo
+        docker-compose ps
+        
+        # Probar conectividad básica
+        curl -f http://localhost:9000 || echo "Frontend no disponible aún"
+        curl -f http://localhost:5000 || echo "Backend no disponible aún"
+        
+        # Limpiar
+        docker-compose down
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test, build-and-test-docker]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Extract metadata for backend
+      id: meta-backend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          
+    - name: Extract metadata for frontend
+      id: meta-frontend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+        
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/dockerfile
+        push: true
+        tags: ${{ steps.meta-backend.outputs.tags }}
+        labels: ${{ steps.meta-backend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./dockerfile
+        push: true
+        tags: ${{ steps.meta-frontend.outputs.tags }}
+        labels: ${{ steps.meta-frontend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build-and-test-docker
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test, build-and-test-docker, deploy, security-scan]
+    if: always()
+    
+    steps:
+    - name: Notify deployment status
+      run: |
+        if [[ "${{ needs.test.result }}" == "success" && "${{ needs.build-and-test-docker.result }}" == "success" ]]; then
+          echo "✅ CI/CD Pipeline completed successfully!"
+          echo "- Tests: ${{ needs.test.result }}"
+          echo "- Docker Build: ${{ needs.build-and-test-docker.result }}"
+          echo "- Deploy: ${{ needs.deploy.result }}"
+          echo "- Security Scan: ${{ needs.security-scan.result }}"
+        else
+          echo "❌ CI/CD Pipeline failed!"
+          echo "- Tests: ${{ needs.test.result }}"
+          echo "- Docker Build: ${{ needs.build-and-test-docker.result }}"
+          echo "- Deploy: ${{ needs.deploy.result }}"
+          echo "- Security Scan: ${{ needs.security-scan.result }}"
+          exit 1
+        fi

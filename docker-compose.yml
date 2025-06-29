@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE_PRODUCTO=${MYSQL_DATABASE_PRODUCTO}
+      - MYSQL_DATABASE_CLIENTE=${MYSQL_DATABASE_CLIENTE}
+      - MYSQL_DATABASE_EMPLEADO=${MYSQL_DATABASE_EMPLEADO}
+      - MYSQL_PORT=${MYSQL_PORT}
+    volumes:
+      - ./backend:/app
+    restart: always
+    networks:
+      - ferremas-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "9000:9000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9000
+      - REACT_APP_API_URL=http://backend:5000/api
+      - WDS_SOCKET_HOST=0.0.0.0
+      - WDS_SOCKET_PORT=9000
+    depends_on:
+      - backend
+    restart: always
+    networks:
+      - ferremas-network
+
+networks:
+  ferremas-network:
+    driver: bridge

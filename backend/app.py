@@ -871,9 +871,6 @@ def get_exchange_rate(currency):
             'currency': currency.upper()
         }), 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
 # Punto de entrada de la aplicación
 if __name__ == '__main__':
     # Ejecutar aplicación Flask en modo debug
