@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import './FijacionesPage.css';
+import { useCarrito } from '../../Carrito/CarritoContext';
+import BtnAddCard from '../../../btnAddCard';
+import API_BASE_URL from '../../../config/apiConfig';
 
 const extractRealBase64 = (encodedString) => {
     try {
@@ -32,49 +36,32 @@ const renderProductImage = (producto) => {
 };
 
 const FijacionesPage = () => {
+    const { agregarAlCarrito } = useCarrito();
     const [productos, setProductos] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Estados para los filtros
     const [precioMin, setPrecioMin] = useState('');
     const [precioMax, setPrecioMax] = useState('');
     const [busqueda, setBusqueda] = useState('');
 
-    // Estados para los rangos de precios
     const [precioMinBD, setPrecioMinBD] = useState(0);
     const [precioMaxBD, setPrecioMaxBD] = useState(0);
 
-    const handleAddToCart = async (producto) => {
-        try {
-            // Aquí implementarías la lógica de SweetAlert2
-            alert('La fijación se agregó al carrito correctamente');
-        } catch (error) {
-            alert('No se pudo agregar el producto al carrito');
-        }
-    };
-
-    // Cargar datos iniciales
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
 
-                // Cargar productos - reemplaza con tu endpoint
-                const response = await fetch('http://localhost:5000/api/productos');
+                const response = await fetch(`${API_BASE_URL}/productos`);
                 const data = await response.json();
 
                 if (data.success) {
-                    // Filtrar solo fijaciones (id_categoria = 6)
-                    const fijaciones = data.data.filter(
-                        p => p.id_categoria === 6
-                    );
-
+                    const fijaciones = data.data.filter(p => p.id_categoria === 6);
                     setProductos(fijaciones);
                     setProductosFiltrados(fijaciones);
 
-                    // Calcular rangos de precio
                     if (fijaciones.length > 0) {
                         const precios = fijaciones.map(p => p.precio);
                         setPrecioMinBD(Math.min(...precios));
@@ -92,11 +79,9 @@ const FijacionesPage = () => {
         fetchData();
     }, []);
 
-    // Filtrar productos cuando cambien los filtros
     useEffect(() => {
         let resultados = [...productos];
 
-        // Filtrar por precio
         if (precioMin) {
             resultados = resultados.filter(p => p.precio >= parseFloat(precioMin));
         }
@@ -105,7 +90,6 @@ const FijacionesPage = () => {
             resultados = resultados.filter(p => p.precio <= parseFloat(precioMax));
         }
 
-        // Filtrar por búsqueda
         if (busqueda) {
             const termino = busqueda.toLowerCase();
             resultados = resultados.filter(p =>
@@ -118,11 +102,28 @@ const FijacionesPage = () => {
         setProductosFiltrados(resultados);
     }, [productos, precioMin, precioMax, busqueda]);
 
-    // Limpiar todos los filtros
     const limpiarFiltros = () => {
         setPrecioMin('');
         setPrecioMax('');
         setBusqueda('');
+    };
+
+    const handleAddToCart = (producto) => {
+        const productoConImagen = {
+            ...producto,
+            img_prod: renderProductImage(producto) // Formatear imagen antes de agregar
+        };
+
+        agregarAlCarrito(productoConImagen);
+
+        Swal.fire({
+            title: 'Producto agregado',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            willClose: () => {
+            }
+        });
     };
 
     if (loading) {
@@ -148,10 +149,8 @@ const FijacionesPage = () => {
         <div className="container fijaciones-container py-4">
             <h1 className="text-center mb-5">Fijaciones y Sujetadores</h1>
 
-            {/* Filtros */}
             <div className="card p-3 mb-4">
                 <div className="row">
-                    {/* Búsqueda por texto */}
                     <div className="col-md-5">
                         <label className="form-label">Buscar fijaciones:</label>
                         <input
@@ -163,7 +162,6 @@ const FijacionesPage = () => {
                         />
                     </div>
 
-                    {/* Filtros de precio */}
                     <div className="col-md-2">
                         <label className="form-label">Precio Mín:</label>
                         <input
@@ -201,7 +199,6 @@ const FijacionesPage = () => {
                 </div>
             </div>
 
-            {/* Contador de resultados */}
             <div className="mb-3">
                 <p className="text-muted">
                     Mostrando {productosFiltrados.length} fijación{productosFiltrados.length !== 1 ? 'es' : ''}
@@ -209,7 +206,6 @@ const FijacionesPage = () => {
                 </p>
             </div>
 
-            {/* Resultados */}
             <div className="row">
                 {productosFiltrados.length > 0 ? (
                     productosFiltrados.map(producto => (
@@ -226,14 +222,10 @@ const FijacionesPage = () => {
                                         {producto.nom_prod}
                                     </h5>
                                     <p className="card-text">
-                                        <small className="text-muted">
-                                            {producto.descr_prod}
-                                        </small>
+                                        <small className="text-muted">{producto.descr_prod}</small>
                                     </p>
                                     <div className="mb-2">
-                                        <small className="text-muted">
-                                            <strong>Marca:</strong> {producto.marca}
-                                        </small>
+                                        <small className="text-muted"><strong>Marca:</strong> {producto.marca}</small>
                                     </div>
                                     <div className="d-flex justify-content-between align-items-center mb-2">
                                         <span className="fw-bold text-primary fs-5">
@@ -244,13 +236,10 @@ const FijacionesPage = () => {
                                         </span>
                                     </div>
                                     <div className="button-wrapper mt-auto">
-                                        <button 
-                                            className="btn btn-primary w-100" 
-                                            onClick={() => handleAddToCart(producto)}
-                                            disabled={producto.stock === 0}
-                                        >
-                                            {producto.stock > 0 ? 'Añadir al carrito' : 'Sin stock'}
-                                        </button>
+                                        <BtnAddCard
+                                            producto={producto}
+                                            handleAddToCart={handleAddToCart}
+                                        />
                                     </div>
                                 </div>
                             </div>

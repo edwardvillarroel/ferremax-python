@@ -1,80 +1,200 @@
-.div-carrito {
+h1 {
+  margin-bottom: 30px;
+  font-size: 2.5rem;
+  text-align: center;
+  color: #333;
+}
+
+.cart-list {
+  display: flex;
+  flex-direction: column !important;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
   padding: 20px;
-  max-width: 1000px;
-  margin: 0 auto;
-  background-color: #f9f9f9;
+}
+
+.cart-item-card {
+  width: auto !important;
+  height: auto !important;
+  flex-direction: row !important;
+  display: flex;
+  align-items: center !important;
+  border: 1px solid #ccc;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
   border-radius: 8px;
+  background: #fff;
 }
 
-.div-carrito h1{
-    margin-bottom: 30px;
+.cart-item-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 
-.cart-header,
-.cart-item {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
-  align-items: center;
-  gap: 1px;
-  padding: 2px 0;
+.cart-item-img {
+  width: 100px !important;
+  height: 100px !important;
+  margin-left: 20px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 20px;
 }
-
-.cart-header {
-  font-weight: bold;
-  border-bottom: 2px solid #ccc;
-  margin-bottom: 10px;
-}
-
-
 
 .cart-item-info {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cart-item-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+}
+
+.cart-item-price {
+  color: #666;
+}
+
+.cart-item-controls {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  .cart-list {
+    display: flex;
+    flex-wrap: wrap;
+    /* para que los items bajen a la siguiente fila si no caben */
+    gap: 20px;
+    /* espacio entre productos */
+  }
+
+  .cart-item-card {
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 180px;
+    /* ancho fijo para que queden alineados */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  .cart-item-name {
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .cart-item-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .cart-item-img {
+    width: 100%;
+    height: auto;
+    margin-bottom: 8px;
+    object-fit: contain;
+  }
+
+  .cart-item-info {
+    text-align: center;
+    width: 100%;
+  }
+
+  .cart-item-price,
+  .cart-item-quantity,
+  .cart-item-subtotal {
+    margin: 4px 0;
+  }
+
+  /* Posicionar botón "basurero" en esquina superior derecha */
+  .basurero {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: transparent;
+    border: none;
+    color: red;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.qty-control {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.cart-item-img {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  margin-right: 15px;
-  top:0;
+.qty-control button {
+  font-size: 18px;
+  padding: 4px 10px;
 }
 
-.cart-item-desc {
-  font-size: 14px;
+.cart-item-subtotal {
+  font-weight: 600;
+  font-size: 1rem;
 }
 
-.cart-item-price,
-.cart-item-subtotal,
-.cart-item-qty,
-.cart-item-delete {
-  text-align: center;
-  margin-right: 80px;
+.basurero {
+  background-color: transparent;
+  border: none;
+  color: #1d1b1bcb;
+  transition: background-color 0.3s ease;
+  margin-right: 30px;
 }
 
-.cart-qty-btn {
-  font-size: 20px;
+.basurero:hover {
+  background-color: transparent;
+  color: #ff0000;
+  cursor: pointer;
 }
 
-.cart-item-qty{
-    margin-right: 30px;
-}
-
-.cart-item-subtotal{
-margin-right: 30px;
-}
-.cart-total {
-  font-size: 1.2rem;
+.cart-total-section {
+  text-align: right;
+  font-size: 1.3rem;
   font-weight: bold;
+  margin-top: 30px;
 }
+
+.cart-actions {
+  text-align: center;
+  margin-top: 20px;
+}
+
 .cart-empty {
   text-align: center;
   padding: 40px;
-  color: #666;
+  font-size: 1.2rem;
+  color: #777;
 }
-.basurero {
-  font-size: 30px;
-  color: rgba(37, 36, 36, 0.842);
+
+.btn-cantidad {
+  border: none !important;
+  background-color: transparent !important;
+  padding: 10px 10px;
+  font-size: 15px;
   cursor: pointer;
+}
+
+.btn-cantidad:hover {
+  color: #333;
+}
+
+@media (max-width: 600px) {
+  .cart-item-card {
+    width: 100%;
+  }
 }

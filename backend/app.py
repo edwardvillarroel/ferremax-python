@@ -58,7 +58,7 @@ INTEGRATION_TYPE = IntegrationType.TEST  # Tipo de integración (TEST para prueb
 transactions = {}
 
 # URLs para el flujo de pagos
-RETURN_URL = "http://localhost:5000/api/webpay/retorno"  # URL donde Transbank envía la respuesta
+RETURN_URL = os.getenv('WEBPAY_RETURN_URL', "http://localhost:5000/api/webpay/retorno")  # URL donde Transbank envía la respuesta
 FINAL_URL = "http://localhost:3001/resultado"  # URL final donde se redirige al usuario
 
 # Configuración de Swagger para documentación de la API
@@ -871,6 +871,24 @@ def get_exchange_rate(currency):
             'currency': currency.upper()
         }), 500
 
+<<<<<<< HEAD
+=======
+@app.route('/api/transacciones', methods=['GET'])
+def get_transacciones():
+    try:
+        query = 'SELECT * FROM Transaccion'  
+        transacciones = execute_query(query, fetch=True, db_type='transaccion')
+        return jsonify({
+            'success': True,
+            'data': transacciones
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+>>>>>>> 08f6f188ffe23a05c9b201f8cfd851aefcada9bb
 # Punto de entrada de la aplicación
 if __name__ == '__main__':
     # Ejecutar aplicación Flask en modo debug

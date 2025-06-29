@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Form, Modal, InputGroup } from "react-bootstrap";
+import API_BASE_URL from "../../../config/apiConfig";
 
 function GestionEmpleados() {
     const [empleados, setEmpleados] = useState([]);
@@ -23,7 +24,7 @@ function GestionEmpleados() {
 
     // Cargar empleados desde la API
     const cargarEmpleados = () => {
-        fetch("http://localhost:5000/api/empleados")
+        fetch(`${API_BASE_URL}/empleados`)
             .then((res) => res.json())
             .then((data) => setEmpleados(data.data || []))
             .catch((err) => console.error(err));
@@ -74,7 +75,7 @@ function GestionEmpleados() {
     const handleGuardar = () => {
         if (editando) {
             // PUT para editar
-            fetch(`http://localhost:5000/api/empleados/${nuevoEmpleado.id_empleado}`, {
+            fetch(`${API_BASE_URL}/empleados/${nuevoEmpleado.id_empleado}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(nuevoEmpleado),
@@ -90,7 +91,7 @@ function GestionEmpleados() {
                 });
         } else {
             // POST para agregar
-            fetch("http://localhost:5000/api/empleados", {
+            fetch(`${API_BASE_URL}/empleados`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(nuevoEmpleado),
@@ -120,7 +121,7 @@ function GestionEmpleados() {
             setDeleteError("Empleado sin ID válido. No se puede eliminar.");
             return;
         }
-        fetch(`http://localhost:5000/api/empleados/${empleadoAEliminar.id_empleado}`, {
+        fetch(`${API_BASE_URL}/empleados/${empleadoAEliminar.id_empleado}`, {
             method: "DELETE",
         })
             .then((res) => res.json())

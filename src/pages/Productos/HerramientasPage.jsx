@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Card, Row, Col, Spinner } from 'react-bootstrap';
 import axios from 'axios';
-import Button from 'react-bootstrap/Button';
+import BtnAddCard from '../../btnAddCard';
 import './HerramientasPage.css';
 import Swal from 'sweetalert2';
+import { useCarrito } from '../Carrito/CarritoContext';
+import API_BASE_URL from '../../config/apiConfig';
 
 const extractRealBase64 = (encodedString) => {
     try {
@@ -37,9 +39,10 @@ const renderProductImage = (producto) => {
 
 
 const HerramientasPage = () => {
+    const { agregarAlCarrito } = useCarrito();
     const [productos, setProductos] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
-    const [categorias, setCategorias] = useState([
+    const [categorias] = useState([
         { id_categoria: 1, nom_cat: 'Herramientas' },
         { id_categoria: 2, nom_cat: 'Herramientas Manuales' },
         { id_categoria: 3, nom_cat: 'Materiales Básicos' }
@@ -63,22 +66,21 @@ const HerramientasPage = () => {
         return categoria ? categoria.nom_cat : 'Categoría Desconocida';
     }, [categorias]);
 
-    const handleAddToCart = async (producto) => {
-        try {
-            Swal.fire({
-                icon: 'success',
-                title: 'Producto agregado',
-                text: 'El producto se agregó al carrito correctamente',
-                timer: 1500,
-                showConfirmButton: false
-            });
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo agregar el producto al carrito'
-            });
-        }
+    const handleAddToCart = (producto) => {
+        const productoConImagen = {
+            ...producto,
+            img_prod: renderProductImage(producto)
+        };
+
+        agregarAlCarrito(productoConImagen);
+        Swal.fire({
+            title: 'Producto agregado',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            willClose: () => {
+            }
+        });
     };
 
     // Cargar datos iniciales
@@ -88,7 +90,7 @@ const HerramientasPage = () => {
                 setLoading(true);
 
                 // Cargar productos
-                const response = await axios.get('http://localhost:5000/api/productos');
+                const response = await axios.get(`${API_BASE_URL}/productos`);
 
                 if (response.data.success) {
                     // Filtrar solo herramientas (categorías 1-3)
@@ -282,10 +284,11 @@ const HerramientasPage = () => {
                                             <strong>Categoría:</strong> {getNombreCategoria(producto.id_categoria)}
                                         </small>
                                     </div>
-                                    <div className="button-wrapper">
-                                        <Button className="button-card" onClick={() => handleAddToCart(producto)}>
-                                            Añadir al carrito
-                                        </Button>
+                                    <div className="button-wrapper mt-auto">
+                                        <BtnAddCard
+                                            producto={producto}
+                                            handleAddToCart={handleAddToCart}
+                                        />
                                     </div>
                                 </Card.Body>
                             </Card>

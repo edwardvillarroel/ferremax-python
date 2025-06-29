@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Card, Row, Col, Spinner } from 'react-bootstrap';
 import axios from 'axios';
-import Button from 'react-bootstrap/Button';
-import './TornillosPage.css'; 
+import BtnAddCard from '../../../btnAddCard';
+import './TornillosPage.css';
 import Swal from 'sweetalert2';
+import { useCarrito } from '../../Carrito/CarritoContext';
+import API_BASE_URL from '../../../config/apiConfig';
 
 const extractRealBase64 = (encodedString) => {
     try {
@@ -36,6 +38,7 @@ const renderProductImage = (producto) => {
 };
 
 const TornillosPage = () => {
+    const { agregarAlCarrito } = useCarrito();
     const [productos, setProductos] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -50,23 +53,25 @@ const TornillosPage = () => {
     const [precioMinBD, setPrecioMinBD] = useState(0);
     const [precioMaxBD, setPrecioMaxBD] = useState(0);
 
-    const handleAddToCart = async (producto) => {
-        try {
-            Swal.fire({
-                icon: 'success',
-                title: 'Producto agregado',
-                text: 'El tornillo se agregó al carrito correctamente',
-                timer: 1500,
-                showConfirmButton: false
-            });
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo agregar el producto al carrito'
-            });
-        }
+    const handleAddToCart = (producto) => {
+        const productoConImagen = {
+            ...producto,
+            img_prod: renderProductImage(producto) //sobrescribe img_prod con versión formateada
+        };
+
+        agregarAlCarrito(productoConImagen);
+
+        Swal.fire({
+            title: 'Producto agregado',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            willClose: () => {
+            }
+        });
     };
+
+
 
     // Cargar datos iniciales
     useEffect(() => {
@@ -75,7 +80,7 @@ const TornillosPage = () => {
                 setLoading(true);
 
                 // Cargar productos
-                const response = await axios.get('http://localhost:5000/api/productos');
+                const response = await axios.get(`${API_BASE_URL}/productos`);
 
                 if (response.data.success) {
                     // Filtrar solo tornillos (id_categoria = 5)
@@ -223,7 +228,7 @@ const TornillosPage = () => {
             <Row>
                 {productosFiltrados.length > 0 ? (
                     productosFiltrados.map(producto => (
-                        <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} className="mb-4">
+                        <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} xl={2} className="mb-4">
                             <Card className="h-100 shadow-sm">
                                 <Card.Img
                                     variant="top"
@@ -255,13 +260,10 @@ const TornillosPage = () => {
                                         </span>
                                     </div>
                                     <div className="button-wrapper mt-auto">
-                                        <Button 
-                                            className="button-card w-100" 
-                                            onClick={() => handleAddToCart(producto)}
-                                            disabled={producto.stock === 0}
-                                        >
-                                            {producto.stock > 0 ? 'Añadir al carrito' : 'Sin stock'}
-                                        </Button>
+                                        <BtnAddCard
+                                            producto={producto}
+                                            handleAddToCart={handleAddToCart}
+                                        />
                                     </div>
                                 </Card.Body>
                             </Card>

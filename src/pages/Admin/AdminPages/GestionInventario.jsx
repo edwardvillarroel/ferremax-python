@@ -26,9 +26,9 @@ function GestionInventario() {
     const [loading, setLoading] = useState(false);
 
     // Configuración de la API
-    const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
-    // Función para hacer peticiones con mejor manejo de errores
+    // Función para hacer peticiones con mejor manejo de erroress
     const fetchWithErrorHandling = async (url, options = {}) => {
         try {
             console.log(`Realizando petición a: ${url}`);

@@ -1,0 +1,116 @@
+.webpay-container {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    max-width: 500px;
+    margin: 40px auto;
+}
+
+.webpay-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.webpay-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.webpay-icon {
+    height: 32px;
+    width: 32px;
+    color: #4f46e5;
+    margin-right: 12px;
+}
+
+.webpay-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.webpay-input,
+.webpay-input-amount {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.webpay-input:focus,
+.webpay-input-amount:focus {
+    outline: none;
+    border-color: #6366f1;
+    /* indigo-500 */
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+.webpay-amount-container {
+    position: relative;
+}
+
+.webpay-amount-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    height: 20px;
+    width: 20px;
+}
+
+.webpay-input-amount {
+    padding-left: 40px;
+}
+
+.webpay-total-text {
+    margin-top: 8px;
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+.webpay-button {
+    width: 100%;
+    background: linear-gradient(to right, #4f46e5, #8b5cf6);
+    color: white;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 0.5rem;
+    margin-top: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.webpay-button:hover {
+    background: linear-gradient(to right, #4338ca, #7c3aed);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(99, 102, 241, 0.3);
+}
+
+.webpay-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.webpay-footer {
+    margin-top: 16px;
+    padding: 12px;
+    background-color: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    color: #1e40af;
+    text-align: center;
+}

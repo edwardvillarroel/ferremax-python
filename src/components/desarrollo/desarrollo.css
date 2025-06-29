@@ -1,148 +1,126 @@
+/* Card de promoción */
 .cardPromocion {
-  margin: 15px;
-  flex: 0 1 250px;
-  justify-content: center;
-  text-align: center;
-  position: relative;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  margin: 15px !important;
+  flex: 0 1 350px !important;
+  justify-content: center !important;
+  text-align: center !important;
+  position: relative !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .cardPromocion .card-img-top {
-  height: 200px;
-  object-fit: contain;
-  object-position: center;
-  width: 100%;
-  background-color: #f8f9fa;
+  height: 200px !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  width: 100% !important;
+  background-color: #f8f9fa !important;
 }
 
 .description {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 8px 0;
-  flex: 1;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  font-size: 0.9rem !important;
+  color: #666 !important;
+  margin: 8px 0 !important;
+  flex: 1 !important;
+  overflow: hidden !important;
+  display: -webkit-box !important;
 }
 
 .stock {
-  font-size: 0.8rem;
-  color: #28a745;
-  display: block;
-  margin-top: 5px;
-}
-
-.discount-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: #e53935;
-  color: white;
-  padding: 5px 10px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  border-radius: 5px;
-}
-
-.old-price {
-  text-decoration: line-through;
-  color: #888;
-  margin-left: 10px;
+  font-size: 0.8rem !important;
+  color: #28a745 !important;
+  display: block !important;
+  margin-top: 5px !important;
 }
 
 .current-price {
-  color: #00d42e;
-  font-weight: bold;
+  color: #00d42e !important;
+  font-weight: bold !important;
 }
 
 .card-title {
-  color: #888;
-  height: 2.5em;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  color: #888 !important;
+  height: 2.5em !important;
+  overflow: hidden !important;
+  display: -webkit-box !important;
 }
 
 .card-divider {
-  height: 1px;
-  background-color: #c0b9b9c9;
-  margin: 0 1rem;
+  height: 1px !important;
+  background-color: #c0b9b9c9 !important;
+  margin: 0 1rem !important;
 }
+
 
 .card-body-custom {
-  text-align: left;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  text-align: left !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
+
 .button-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: auto;
-  padding-top: 10px;
+  display: flex !important;
+  justify-content: center !important;
+  margin-top: auto !important;
+  padding-top: 10px !important;
 }
 
 .button-card {
   background-color: #00bcd4 !important;
   color: aliceblue !important;
-  border: none;
+  border: none !important;
   border-radius: 8px !important;
   padding: 10px 70px !important;
-  font-weight: 500;
-  text-transform: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s !important;
 }
 
 .cards-wrapper {
-  display: flex;
-  flex-wrap: wrap;        
-  justify-content: center; 
-  gap: 20px;               
-  padding: 20px;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 20px !important;
+  padding: 20px !important;
 }
 
-.products-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  padding: 20px;
-  width: 100%;
-  box-sizing: border-box;
-}
 
 .media-card-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.cardPromocion {
-  width: 300px;
-  max-width: 100%;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
 }
 
 .imagen-no-disponible {
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f5f5f5;
-  color: #666;
-  font-size: 1rem;
-  text-align: center;
-  border-radius: 4px 4px 0 0;
+  height: 200px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #f5f5f5 !important;
+  color: #666 !important;
+  font-size: 1rem !important;
+  text-align: center !important;
+  border-radius: 4px 4px 0 0 !important;
 }
 
 .cards-wrapper {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  flex-wrap: wrap;
-  margin-bottom: 2rem;
+  display: flex !important;
+  justify-content: center !important;
+  gap: 2rem !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 2rem !important;
+}
+
+@media (max-width: 768px) {
+  .cardPromocion {
+    width: 100%;
+  }
+
+  .button-card {
+    padding: 8px 50px !important;
+  }
 }

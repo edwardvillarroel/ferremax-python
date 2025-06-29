@@ -45,7 +45,7 @@ function AdminPage() {
               <Card.Text className="text-center">
                 Genera y revisa informes de ventas mensuales.
               </Card.Text>
-              <Button variant="info" className="mt-auto w-100 text-white">
+              <Button variant="info" className="mt-auto w-100 text-white" onClick={() => navigate('/admin/ventas')}>
                 Ver informes de ventas
               </Button>
             </Card.Body>
@@ -59,7 +59,7 @@ function AdminPage() {
               <Card.Text className="text-center">
                 Consulta el desempeño general de la tienda.
               </Card.Text>
-              <Button variant="warning" className="mt-auto w-100">
+              <Button variant="warning" className="mt-auto w-100" onClick={() => navigate('/admin/desempeño')}>
                 Ver desempeño
               </Button>
             </Card.Body>
@@ -73,7 +73,7 @@ function AdminPage() {
               <Card.Text className="text-center">
                 Crea y gestiona promociones y estrategias de ventas.
               </Card.Text>
-              <Button variant="success" className="mt-auto w-100">
+              <Button variant="success" className="mt-auto w-100" onClick={() => navigate('/admin/promociones')}>
                 Gestionar promociones
               </Button>
             </Card.Body>

@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { testConnection } from '../../api';
+import API_BASE_URL from '../../config/apiConfig';
 
 const InicioPage = () => {
   const [showPassword, setPasword] = useState(false);
@@ -14,8 +15,9 @@ const InicioPage = () => {
   const [password, setPassword] = useState('');
   const [esEmpleado, setEsEmpleado] = useState(false); // Nuevo estado
   const navigate = useNavigate();
-  const [connectionStatus, setConnectionStatus] = useState('');
+  // const [connectionStatus, setConnectionStatus] = useState('');
   const { login, loginWithGoogle } = useContext(AuthContext);
+
 
   const paswordShow = () => setPasword(!showPassword);
 
@@ -24,8 +26,8 @@ const InicioPage = () => {
 
     // Cambia el endpoint según el tipo de usuario
     const endpoint = esEmpleado
-      ? 'http://localhost:5000/api/login-empleado'
-      : 'http://localhost:5000/api/login';
+      ? `${API_BASE_URL}/login-empleado`
+      : `${API_BASE_URL}/login`;
 
     try {
       const res = await fetch(`${endpoint}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
