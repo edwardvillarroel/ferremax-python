@@ -9,7 +9,9 @@ function CarritoPage() {
     const navigate = useNavigate();
     const { carrito, eliminarDelCarrito, obtenerTotal, actualizarCantidad } = useCarrito();
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error] = useState(null);
+    const [productosSeleccionados, setProductosSeleccionados] = useState([]);
+
 
     const eliminarProducto = async (idProducto) => {
         try {
@@ -27,6 +29,15 @@ function CarritoPage() {
             actualizarCantidad(idProducto, nuevaCantidad);
         }
     };
+
+    const toggleSeleccionProducto = (idProducto) => {
+        setProductosSeleccionados((prevSeleccionados) => {
+            return prevSeleccionados.includes(idProducto)
+                ? prevSeleccionados.filter((id) => id !== idProducto)
+                : [...prevSeleccionados, idProducto];
+        });
+    };
+
 
     useEffect(() => {
         setLoading(false);
@@ -52,7 +63,7 @@ function CarritoPage() {
     }
 
     return (
-        <div className="div-carrito">
+        <div>
             <h1>Carrito de Compras</h1>
 
             {carrito.length === 0 ? (
@@ -62,6 +73,12 @@ function CarritoPage() {
                     <div className="cart-list">
                         {carrito.map((item) => (
                             <div className="cart-item-card" key={item.id_producto}>
+                                <input
+                                    type="checkbox"
+                                    checked={productosSeleccionados.includes(item.id_producto)}
+                                    onChange={() => toggleSeleccionProducto(item.id_producto)}
+                                    style={{ marginRight: '10px' }}
+                                />
                                 <img
                                     src={item.img_prod}
                                     alt={item.nom_prod}
@@ -116,7 +133,21 @@ function CarritoPage() {
                     </div>
 
                     <div className="cart-actions">
-                        <Button variant="success" onClick={() => navigate('/webpay')} className="mt-3">
+                        <Button
+                            variant="success"
+                            onClick={() => {
+                                if (productosSeleccionados.length === 0) {
+                                    Swal.fire('Selecciona al menos un producto a pagar', '', 'warning');
+                                } else {
+                                    const totalSeleccionados = carrito
+                                        .filter(item => productosSeleccionados.includes(item.id_producto))
+                                        .reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+
+                                    navigate('/webpay', { state: { total: totalSeleccionados } });
+                                }
+                            }}
+                            className="mt-3"
+                        >
                             Pagar
                         </Button>
                     </div>

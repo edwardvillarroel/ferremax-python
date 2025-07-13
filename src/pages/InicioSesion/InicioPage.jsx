@@ -15,9 +15,9 @@ const InicioPage = () => {
   const [password, setPassword] = useState('');
   const [esEmpleado, setEsEmpleado] = useState(false); // Nuevo estado
   const navigate = useNavigate();
-  const [connectionStatus, setConnectionStatus] = useState('');
+  // const [connectionStatus, setConnectionStatus] = useState('');
   const { login, loginWithGoogle } = useContext(AuthContext);
-  
+
 
   const paswordShow = () => setPasword(!showPassword);
 

@@ -102,11 +102,10 @@ function MediaCardLanzamientos() {
                   <p className="description">{producto.descr_prod}</p>
                   <span className="stock">Stock: {producto.stock} unidades</span>
                 </Card.Text>
-                <div className="button-wrapper">
+                <div>
                   <BtnAddCard
                     producto={producto}
                     handleAddToCart={handleAddToCart}
-                    className="button-card"
                   />
                 </div>
               </Card.Body>
@@ -186,7 +185,6 @@ function MediaCardPromocion() {
                   <BtnAddCard
                     producto={producto}
                     handleAddToCart={handleAddToCart}
-                    className="button-card"
                   />
                 </div>
               </Card.Body>

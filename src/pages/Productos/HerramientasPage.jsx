@@ -42,7 +42,7 @@ const HerramientasPage = () => {
     const { agregarAlCarrito } = useCarrito();
     const [productos, setProductos] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
-    const [categorias, setCategorias] = useState([
+    const [categorias] = useState([
         { id_categoria: 1, nom_cat: 'Herramientas' },
         { id_categoria: 2, nom_cat: 'Herramientas Manuales' },
         { id_categoria: 3, nom_cat: 'Materiales Básicos' }
@@ -284,7 +284,7 @@ const HerramientasPage = () => {
                                             <strong>Categoría:</strong> {getNombreCategoria(producto.id_categoria)}
                                         </small>
                                     </div>
-                                    <div className="button-wrapper">
+                                    <div className="button-wrapper mt-auto">
                                         <BtnAddCard
                                             producto={producto}
                                             handleAddToCart={handleAddToCart}

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreditCard, DollarSign, Loader2 } from 'lucide-react';
-import './pagowebpay.css'
+import { useLocation } from 'react-router-dom';
+import './pagowebpay.css';
 
 const TransbankPayment = ({
 apiBaseUrl = process.env.REACT_APP_API_URL || '/api',
@@ -9,63 +10,69 @@ apiBaseUrl = process.env.REACT_APP_API_URL || '/api',
   returnUrl = `${window.location.origin}/payment-result`,
   className = ''
 }) => {
-  const [amount, setAmount] = useState('');
+  const location = useLocation();
+
+  // Si viene el total desde el carrito, lo usamos como monto inicial
+  const totalDesdeCarrito = location.state?.total || '';
+
+  const [amount, setAmount] = useState(totalDesdeCarrito);
   const [loading, setLoading] = useState(false);
   const [description, setDescription] = useState('');
 
-  const formatCurrency = (amount) => {
+  useEffect(() => {
+    // Cuando cambia el total que llega por props, actualizamos el amount
+    setAmount(totalDesdeCarrito);
+  }, [totalDesdeCarrito]);
+
+  const formatCurrency = (value) => {
+    if (!value || isNaN(value)) return '';
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
-    }).format(amount);
+      currency: 'CLP',
+    }).format(value);
   };
 
   const handlePayment = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
+    const parsedAmount = parseFloat(amount);
+
+    if (!parsedAmount || parsedAmount <= 0) {
       alert('Por favor ingresa un monto válido');
       return;
     }
 
     setLoading(true);
+
     try {
       const response = await fetch(`${apiBaseUrl}/webpay/crear_transaccion`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: parseFloat(amount),
+          amount: parsedAmount,
           return_url: returnUrl,
-          description: description || 'Pago online'
+          description: description || 'Pago online',
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Guardar información en localStorage para el retorno
-        localStorage.setItem('transbank_payment_data', JSON.stringify({
-          buy_order: data.buy_order,
-          amount: data.amount,
-          timestamp: new Date().toISOString()
-        }));
-
-        // Redirigir a Transbank
+        localStorage.setItem(
+          'transbank_payment_data',
+          JSON.stringify({
+            buy_order: data.buy_order,
+            amount: data.amount,
+            timestamp: new Date().toISOString(),
+          })
+        );
         window.location.href = `${data.url}?token_ws=${data.token}`;
       } else {
-        if (onPaymentError) {
-          onPaymentError(data.error);
-        } else {
-          alert(`Error: ${data.error}`);
-        }
+        if (onPaymentError) onPaymentError(data.error);
+        else alert(`Error: ${data.error}`);
       }
     } catch (error) {
       const errorMsg = `Error de conexión: ${error.message}`;
-      if (onPaymentError) {
-        onPaymentError(errorMsg);
-      } else {
-        alert(errorMsg);
-      }
+      if (onPaymentError) onPaymentError(errorMsg);
+      else alert(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -105,16 +112,16 @@ apiBaseUrl = process.env.REACT_APP_API_URL || '/api',
               required
             />
           </div>
-          {amount && (
+          {amount && !isNaN(amount) && (
             <p className="webpay-total-text">
-              Total: {formatCurrency(parseFloat(amount) || 0)}
+              Total: {formatCurrency(parseFloat(amount))}
             </p>
           )}
         </div>
 
         <button
           onClick={handlePayment}
-          disabled={loading || !amount}
+          disabled={loading || !amount || isNaN(amount)}
           className="webpay-button"
         >
           {loading ? (
@@ -125,7 +132,7 @@ apiBaseUrl = process.env.REACT_APP_API_URL || '/api',
           ) : (
             <div className="flex items-center justify-center">
               <CreditCard className="h-5 w-5 mr-2" />
-              Pagar {amount && `${formatCurrency(parseFloat(amount))}`}
+              Pagar {amount && formatCurrency(parseFloat(amount))}
             </div>
           )}
         </button>
@@ -135,7 +142,6 @@ apiBaseUrl = process.env.REACT_APP_API_URL || '/api',
         🔒 Ambiente de pruebas - No se realizarán cargos reales
       </div>
     </div>
-
   );
 };
 

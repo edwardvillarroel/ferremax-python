@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const PaymentResult = ({ 
+
+const PaymentResult = ({
   apiBaseUrl = process.env.REACT_APP_API_URL || '/api',
   onBackToPayment,
   className = ''
 }) => {
+  const navigate = useNavigate();
+
   const [paymentResult, setPaymentResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,18 +36,13 @@ const PaymentResult = ({
       setLoading(true);
       const response = await fetch(`${apiBaseUrl}/confirmar-transaccion`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
 
       const data = await response.json();
       setPaymentResult(data);
-      
-      // Limpiar datos temporales
       localStorage.removeItem('transbank_payment_data');
-      
     } catch (error) {
       console.error('Error confirming payment:', error);
       setError('Error al procesar el resultado del pago');
@@ -53,10 +52,8 @@ const PaymentResult = ({
   };
 
   useEffect(() => {
-    // Obtener token de la URL
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token_ws');
-    
     if (token) {
       confirmPayment(token);
     } else {
@@ -64,6 +61,11 @@ const PaymentResult = ({
       setLoading(false);
     }
   }, []);
+
+  const volverAlCarrito = () => {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    navigate('/carrito');
+  };
 
   if (loading) {
     return (
@@ -81,16 +83,14 @@ const PaymentResult = ({
         <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Error</h2>
         <p className="text-gray-600 mb-6">{error}</p>
-        
-        {onBackToPayment && (
-          <button
-            onClick={onBackToPayment}
-            className="flex items-center justify-center w-full bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver a Intentar
-          </button>
-        )}
+
+        <button
+          onClick={volverAlCarrito}
+          className="flex items-center justify-center w-full bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Volver al Carrito
+        </button>
       </div>
     );
   }
@@ -102,24 +102,19 @@ const PaymentResult = ({
       {isSuccess ? (
         <>
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            ¡Pago Exitoso!
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">¡Pago Exitoso!</h2>
           <p className="text-gray-600 mb-6">Tu pago ha sido procesado correctamente</p>
         </>
       ) : (
         <>
           <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Pago Rechazado
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Pago Rechazado</h2>
           <p className="text-gray-600 mb-6">
             {paymentResult?.error || 'No se pudo procesar el pago'}
           </p>
         </>
       )}
 
-      {/* Detalles de la transacción */}
       {paymentResult && (
         <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
           <h3 className="font-semibold text-gray-800 mb-3">Detalles de la Transacción</h3>
@@ -166,52 +161,35 @@ const PaymentResult = ({
         </div>
       )}
 
-      {/* Botones de acción */}
       <div className="space-y-3">
-        {isSuccess ? (
-          <button
-            onClick={() => {
-              // Limpiar URL parameters
-              window.history.replaceState({}, document.title, window.location.pathname);
-              if (onBackToPayment) onBackToPayment();
-            }}
-            className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors font-medium"
-          >
-            Realizar Otro Pago
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              window.history.replaceState({}, document.title, window.location.pathname);
-              if (onBackToPayment) onBackToPayment();
-            }}
-            className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-          >
-            Intentar Nuevamente
-          </button>
-        )}
-        
-        {onBackToPayment && (
-          <button
-            onClick={() => {
-              window.history.replaceState({}, document.title, window.location.pathname);
-              onBackToPayment();
-            }}
-            className="flex items-center justify-center w-full text-gray-600 hover:text-gray-800 py-2 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver al Inicio
-          </button>
-        )}
+        <button
+          onClick={volverAlCarrito}
+          className={`w-full ${isSuccess ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white py-3 px-6 rounded-lg transition-colors font-medium`}
+        >
+          {isSuccess ? 'Realizar Otro Pago' : 'Intentar Nuevamente'}
+        </button>
+
+        <button
+          onClick={volverAlCarrito}
+          className="flex items-center justify-center w-full text-gray-600 hover:text-gray-800 py-2 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Volver al Carrito
+        </button>
+
+        <button
+          onClick={volverAlCarrito}
+          className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition"
+        >
+          Anular Compra y Volver
+        </button>
       </div>
 
-      {/* Información adicional */}
       <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
         <p className="text-xs text-blue-700">
-          {isSuccess 
+          {isSuccess
             ? '✅ Transacción completada en ambiente de pruebas'
-            : '❌ Transacción rechazada en ambiente de pruebas'
-          }
+            : '❌ Transacción rechazada en ambiente de pruebas'}
         </p>
       </div>
     </div>
