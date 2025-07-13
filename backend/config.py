@@ -11,7 +11,7 @@ load_dotenv()
 
 DATABASE_CONFIGS = {
     'producto': {
-        'host': os.environ.get('MYSQL_HOST', 'ferremax.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
+        'host': os.environ.get('MYSQL_HOST', 'ferremas.cfcsvln6jd0f.us-west-2.rds.amazonaws.com'),
         'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
         'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
         'database': os.environ.get('MYSQL_DATABASE_PRODUCTO', 'Producto'),
@@ -19,7 +19,7 @@ DATABASE_CONFIGS = {
         'cursorclass': pymysql.cursors.DictCursor
     },
     'cliente': {
-        'host': os.environ.get('MYSQL_HOST', 'ferremax.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
+        'host': os.environ.get('MYSQL_HOST', 'ferremas.cfcsvln6jd0f.us-west-2.rds.amazonaws.com'),
         'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
         'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
         'database': os.environ.get('MYSQL_DATABASE_CLIENTE', 'Cliente'),
@@ -27,7 +27,7 @@ DATABASE_CONFIGS = {
         'cursorclass': pymysql.cursors.DictCursor
     },
     'empleado': {
-        'host': os.environ.get('MYSQL_HOST', 'ferremax.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
+        'host': os.environ.get('MYSQL_HOST', 'ferremas.cfcsvln6jd0f.us-west-2.rds.amazonaws.com'),
         'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
         'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
         'database': os.environ.get('MYSQL_DATABASE_EMPLEADO', 'Empleado'),
@@ -35,7 +35,7 @@ DATABASE_CONFIGS = {
         'cursorclass': pymysql.cursors.DictCursor
     },
     'transaccion': {
-        'host': os.environ.get('MYSQL_HOST', 'ferremax.crwi4crvnqsy.us-east-1.rds.amazonaws.com'),
+        'host': os.environ.get('MYSQL_HOST', 'ferremas.cfcsvln6jd0f.us-west-2.rds.amazonaws.com'),
         'user': os.environ.get('MYSQL_USER', 'Ferremas_adm'),
         'password': os.environ.get('MYSQL_PASSWORD', 'C.AdmFerremas'),
         'database': os.environ.get('MYSQL_DATABASE_TRANSACCION', 'Transaccion'),  
