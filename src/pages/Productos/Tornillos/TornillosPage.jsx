@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Card, Row, Col, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import BtnAddCard from '../../../btnAddCard';
 import './TornillosPage.css';
 import Swal from 'sweetalert2';
 import { useCarrito } from '../../Carrito/CarritoContext';
-import API_BASE_URL from '../../../config/apiConfig';
+import { useCurrency } from '../../../contexts/MonedaContext';
 
 const extractRealBase64 = (encodedString) => {
     try {
@@ -43,6 +43,7 @@ const TornillosPage = () => {
     const [productosFiltrados, setProductosFiltrados] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { formatPrice } = useCurrency(); 
 
     // Estados para los filtros
     const [precioMin, setPrecioMin] = useState('');
@@ -80,7 +81,7 @@ const TornillosPage = () => {
                 setLoading(true);
 
                 // Cargar productos
-                const response = await axios.get(`${API_BASE_URL}/productos`);
+                const response = await axios.get('http://localhost:5000/api/productos');
 
                 if (response.data.success) {
                     // Filtrar solo tornillos (id_categoria = 5)
@@ -226,61 +227,39 @@ const TornillosPage = () => {
 
             {/* Resultados */}
             <Row>
-                {productosFiltrados.length > 0 ? (
-                    productosFiltrados.map(producto => (
-                        <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} xl={2} className="mb-4">
-                            <Card className="h-100 shadow-sm">
-                                <Card.Img
-                                    variant="top"
-                                    src={renderProductImage(producto)}
-                                    alt={producto.nom_prod}
-                                    style={{ height: '200px', objectFit: 'contain' }}
-                                />
-                                <Card.Body>
-                                    <Card.Title className="text-truncate" title={producto.nom_prod}>
-                                        {producto.nom_prod}
-                                    </Card.Title>
-                                    <Card.Text>
-                                        <small className="text-muted">
-                                            {producto.descr_prod}
-                                        </small>
-                                    </Card.Text>
-                                    <div className="mb-2">
-                                        <small className="text-muted">
-                                            <strong>Marca:</strong> {producto.marca}
-                                        </small>
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                        <span className="fw-bold text-primary fs-5">
-                                            ${producto.precio.toLocaleString('es-CL')}
-                                        </span>
-                                        <span className={`badge ${producto.stock > 0 ? 'bg-success' : 'bg-danger'
-                                            }`}>
-                                            {producto.stock > 0 ? `${producto.stock} disponibles` : 'Sin stock'}
-                                        </span>
-                                    </div>
-                                    <div className="button-wrapper mt-auto">
-                                        <BtnAddCard
-                                            producto={producto}
-                                            handleAddToCart={handleAddToCart}
-                                        />
-                                    </div>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    ))
-                ) : (
-                    <Col className="text-center py-5">
-                        <div className="alert alert-info">
-                            <h4>No se encontraron tornillos</h4>
-                            <p>No hay tornillos que coincidan con los filtros aplicados</p>
-                        </div>
-                        <button className="btn btn-primary" onClick={limpiarFiltros}>
-                            Ver todos los tornillos
-                        </button>
-                    </Col>
-                )}
-            </Row>
+      {Array.isArray(productos) && productos.length > 0 ? (
+        productos.map((producto) => (
+          <Col key={producto.id_producto} xs={12} sm={6} md={4} lg={3} className="mb-4">
+            <Card className="cardPromocion">
+              <Card.Img
+                variant="top"
+                src={renderProductImage(producto)}
+                alt={producto.nom_prod}
+              />
+              <div className="card-divider" />
+              <Card.Body className="card-body-custom">
+                <Card.Title className="card-title">{producto.nom_prod}</Card.Title>
+                <Card.Subtitle>{producto.marca}</Card.Subtitle>
+                <Card.Text>
+                  <span className="current-price">{formatPrice(producto.precio)}</span>
+                  <p className="description">{producto.descr_prod}</p>
+                  <span className="stock">Stock: {producto.stock} unidades</span>
+                </Card.Text>
+                <div >
+                  <BtnAddCard
+                    producto={producto}
+                    handleAddToCart={handleAddToCart}
+                    className="button-card"
+                  />
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))
+      ) : (
+        <p>No hay productos disponibles</p>
+      )}
+    </Row>
         </Container>
     );
 };
